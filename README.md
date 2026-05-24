@@ -128,6 +128,19 @@ To eliminate complex session handshakes, the application employs a highly innova
    ```
 4. **Authorize**: For all future requests, simply pass this token inside the header: `Authorization: Bearer <your_jwt_token>`.
 
+### 🔗 5. Instant SSO Auto-Login (Single Sign-On)
+The Web Console Dashboard supports full **Single Sign-On (SSO)** auto-login out of the box:
+* **Usage**: Simply navigate to the root dashboard URL appending the JWT token as a query parameter, for example:
+  ```text
+  http://localhost:9000/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  ```
+* **Mechanism**: On page boot, the Single Page Application automatically:
+  1. Parses and extracts the token from the URL.
+  2. Runs client-side base64 JWT parsing to resolve the active phone account.
+  3. Writes the token and phone session securely to `localStorage` for future API calls.
+  4. Performs a silent `window.history.replaceState` rewrite to remove the `token` parameter from the address bar, preventing token leaks in URL sharing or browser history logs.
+  5. Bypasses the login screens completely, launching the dashboard panel instantly.
+
 ---
 
 ## 🔌 API Endpoint Reference
