@@ -380,6 +380,8 @@ async def download_media_route(
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="Media file not found after download.")
         return FileResponse(file_path)
+    except HTTPException as he:
+        raise he
     except Exception as e:
         logger.error(f"Download media route error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))

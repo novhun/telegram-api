@@ -429,6 +429,12 @@ async def download_message_media(phone: str, chat_id: int, message_id: int) -> s
             if not msg or not msg.media:
                 raise Exception("Message does not contain any media object.")
             
+            # Check if a file with this prefix already exists (caching check)
+            prefix = f"{phone}_{chat_id}_{message_id}"
+            existing_files = [f for f in os.listdir(DOWNLOADS_DIR) if f.startswith(prefix)]
+            if existing_files:
+                return os.path.join(DOWNLOADS_DIR, existing_files[0])
+
             # Resolve extension
             from telethon.utils import get_extension
             ext = get_extension(msg.media) or ""
@@ -437,11 +443,12 @@ async def download_message_media(phone: str, chat_id: int, message_id: int) -> s
             local_filename = f"{phone}_{chat_id}_{message_id}{ext}"
             file_path = os.path.join(DOWNLOADS_DIR, local_filename)
             
-            # Download file if it doesn't already exist locally (caching)
-            if not os.path.exists(file_path):
-                await client.download_media(msg, file=file_path)
+            # Download file using Telethon (which may append appropriate extensions)
+            actual_path = await client.download_media(msg, file=file_path)
+            if not actual_path:
+                raise Exception("Telethon download did not return a valid file path.")
             
-            return file_path
+            return actual_path
         except Exception as e:
             logger.error(f"Download media failed for {phone}: {str(e)}")
             raise e
