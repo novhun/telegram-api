@@ -6,6 +6,14 @@
     <title>Telegram Management Console - Premium Command Center</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230088cc'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.94-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.37.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.19 0 .24z'/%3E%3C/svg%3E">
     
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TG Console">
+    <link rel="apple-touch-icon" href="/icon.svg">
+    
     <!-- External Libraries -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -1025,6 +1033,12 @@
                             <span>Own Groups</span>
                         </a>
                     </li>
+                    <li class="sidebar-nav-item" id="pwaInstallItem" style="display: none;">
+                        <a id="btnInstallPWA" class="sidebar-nav-link text-warning" style="cursor: pointer;">
+                            <i class="fas fa-circle-down text-warning"></i>
+                            <span>Install Native App</span>
+                        </a>
+                    </li>
                     <li class="sidebar-nav-item border-top border-secondary border-opacity-25 pt-2 mt-2">
                         <a href="/docs" target="_blank" class="sidebar-nav-link text-info">
                             <i class="fas fa-book-bookmark text-info"></i>
@@ -1051,6 +1065,13 @@
                             <i class="fas fa-bars fs-4"></i>
                         </button>
                         <h2 id="dashHeaderTitle" class="font-display">Overview Console</h2>
+                    </div>
+                    <!-- Global Search Bar -->
+                    <div id="globalHeaderSearchContainer" class="flex-grow-1 mx-4" style="max-width: 400px; display: none;">
+                        <div class="input-group glass-card px-2 py-1" style="border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 50px;">
+                            <span class="input-group-text bg-transparent border-0 text-muted px-2 py-0 d-flex align-items-center"><i class="fas fa-search"></i></span>
+                            <input type="text" id="inputGlobalHeaderSearch" class="form-control bg-transparent border-0 text-white shadow-none px-2 py-0 fs-7" placeholder="Search Console..." style="height: auto; line-height: 1.5;">
+                        </div>
                     </div>
                     <div class="account-badge">
                         <div class="status-dot"></div>
@@ -1180,13 +1201,18 @@
                                 </div>
 
                                 <!-- Message Type Filters -->
-                                <div class="message-filters-bar">
-                                    <span class="text-muted me-2">Filter:</span>
-                                    <button class="btn btn-link p-0 text-decoration-none text-white fw-bold filter-type-btn active" data-type="all">All</button>
-                                    <span class="text-muted px-2">|</span>
-                                    <button class="btn btn-link p-0 text-decoration-none text-muted filter-type-btn" data-type="text">Text Only</button>
-                                    <span class="text-muted px-2">|</span>
-                                    <button class="btn btn-link p-0 text-decoration-none text-muted filter-type-btn" data-type="media">Media Only</button>
+                                <div class="message-filters-bar d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 px-3 bg-dark bg-opacity-20 border-bottom border-secondary border-opacity-10">
+                                    <div class="d-flex align-items-center">
+                                        <span class="text-muted me-2 fs-8">Filter:</span>
+                                        <button class="btn btn-link p-0 text-decoration-none text-white fw-bold filter-type-btn active fs-8" data-type="all">All</button>
+                                        <span class="text-muted px-2 fs-8">|</span>
+                                        <button class="btn btn-link p-0 text-decoration-none text-muted filter-type-btn fs-8" data-type="text">Text Only</button>
+                                        <span class="text-muted px-2 fs-8">|</span>
+                                        <button class="btn btn-link p-0 text-decoration-none text-muted filter-type-btn fs-8" data-type="media">Media Only</button>
+                                    </div>
+                                    <div class="position-relative" style="max-width: 250px; width: 100%;">
+                                        <input type="text" id="inputMessagesSearch" class="form-control form-control-sm bg-dark bg-opacity-50 text-white border-secondary border-opacity-35 rounded-pill px-3 shadow-none text-truncate fs-8" placeholder="🔍 Search messages in thread..." style="border: 1px solid rgba(255,255,255,0.15); height: 28px; line-height: 28px;">
+                                    </div>
                                 </div>
 
                                 <!-- History Bubbles -->
@@ -1306,8 +1332,61 @@
         let currentlySelectedChatID = null;
         let currentlyActiveChatType = "all"; // all, text, media
 
+        // PWA Installation Prompter
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            $("#pwaInstallItem").show();
+        });
+
         // Document Ready Entrypoint
         $(document).ready(function() {
+            // Register Service Worker for PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((reg) => console.log('Service Worker registered successfully!', reg.scope))
+                    .catch((err) => console.warn('Service Worker registration failed:', err));
+            }
+
+            // PWA Install Click Handler
+            $("#btnInstallPWA").click(async function() {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to PWA prompt: ${outcome}`);
+                deferredPrompt = null;
+                $("#pwaInstallItem").hide();
+            });
+            // SSO / Auto-login from query parameter: ?token=...
+            const urlParams = new URLSearchParams(window.location.search);
+            const ssoToken = urlParams.get('token');
+            if (ssoToken) {
+                let ssoPhone = "Active Account";
+                try {
+                    const base64Url = ssoToken.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    const payload = JSON.parse(jsonPayload);
+                    if (payload && payload.phone) {
+                        ssoPhone = payload.phone;
+                    }
+                } catch (e) {
+                    console.warn("Could not decode SSO JWT payload:", e);
+                }
+                
+                localStorage.setItem(STORAGE_TOKEN_KEY, ssoToken);
+                localStorage.setItem(STORAGE_PHONE_KEY, ssoPhone);
+                
+                // Clean the token parameter from URL so it doesn't leak
+                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+                
+                showToast("SSO auto-login detected!", "success");
+            }
+
             // Check session status automatically
             checkAutoSession();
 
@@ -1330,13 +1409,18 @@
                 const viewTitleText = $(this).find("span").text();
                 $("#dashHeaderTitle").text(viewTitleText + " Console");
 
-                // Trigger view specific loads
+                // Trigger view specific loads and control search bar visibility
                 if (targetViewId === "viewContacts") {
                     loadContacts();
+                    $("#globalHeaderSearchContainer").show().find("input").attr("placeholder", "Search contacts...").val("");
                 } else if (targetViewId === "viewChats") {
                     loadChats();
+                    $("#globalHeaderSearchContainer").show().find("input").attr("placeholder", "Search chats...").val("");
                 } else if (targetViewId === "viewOwnGroups") {
                     loadOwnGroups();
+                    $("#globalHeaderSearchContainer").show().find("input").attr("placeholder", "Search owned groups...").val("");
+                } else {
+                    $("#globalHeaderSearchContainer").hide();
                 }
             });
 
@@ -1470,10 +1554,40 @@
                 submitAuthOTP();
             });
 
-            // Form Token Login Step 3
+             // Form Token Login Step 3
             $("#formTokenLogin").submit(function(e) {
                 e.preventDefault();
                 submitTokenLogin();
+            });
+
+            // Global Header Search handler
+            $("#inputGlobalHeaderSearch").on("keyup", function() {
+                const searchVal = $(this).val().toLowerCase();
+                const activeView = $(".dash-view.active").attr("id");
+                
+                if (activeView === "viewContacts") {
+                    $("#inputContactsSearch").val($(this).val());
+                    filterContactsDOM(searchVal);
+                } else if (activeView === "viewChats") {
+                    $("#inputChatsSearch").val($(this).val());
+                    filterChatsDOM(searchVal);
+                } else if (activeView === "viewOwnGroups") {
+                    filterOwnedGroupsDOM(searchVal);
+                }
+            });
+
+            // Inline Thread Messages Search handler
+            $("#inputMessagesSearch").on("keyup", function() {
+                const searchVal = $(this).val().toLowerCase();
+                $(".message-bubble").each(function() {
+                    const text = $(this).find(".bubble-text").text().toLowerCase();
+                    const sender = $(this).find(".bubble-header").text().toLowerCase();
+                    if (text.includes(searchVal) || sender.includes(searchVal)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
             });
         });
 
@@ -2418,6 +2532,23 @@
             setTimeout(() => {
                 toast.removeClass("show");
             }, 4000);
+        }
+
+        function filterOwnedGroupsDOM(query) {
+            const cards = $("#ownGroupsContainer .contact-item-card");
+            if (!query) {
+                cards.show();
+                return;
+            }
+            cards.each(function() {
+                const name = $(this).find(".contact-info h5").text().toLowerCase();
+                const id = $(this).find(".contact-details div:nth-child(2)").text().toLowerCase();
+                if (name.includes(query) || id.includes(query)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
         }
     </script>
 </body>

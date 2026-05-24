@@ -385,3 +385,18 @@ async def download_media_route(
     except Exception as e:
         logger.error(f"Download media route error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/manifest.json", tags=["PWA"])
+async def get_pwa_manifest():
+    """Expose manifest.json at the application root for PWA support."""
+    return FileResponse("web/manifest.json", media_type="application/json")
+
+@app.get("/sw.js", tags=["PWA"])
+async def get_pwa_sw():
+    """Expose sw.js service worker at the application root for PWA offline caching."""
+    return FileResponse("web/sw.js", media_type="application/javascript")
+
+@app.get("/icon.svg", tags=["PWA"])
+async def get_pwa_icon():
+    """Expose icon.svg at the application root for PWA high-resolution vector scaling."""
+    return FileResponse("web/icon.svg", media_type="image/svg+xml")
