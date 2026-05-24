@@ -3,13 +3,13 @@ from typing import List, Optional
 from datetime import datetime
 
 class LoginRequest(BaseModel):
-    phone_number: str = Field(..., example="+855967171785")
+    phone_number: str = Field(..., example="+85500000000")
 
 class CodeRequest(BaseModel):
-    phone: str = Field(..., example="+855967171785")
+    phone: str = Field(..., example="+855000000000")
     code: str = Field(..., example="12345")
     password: Optional[str] = None 
-    phone_code_hash: str = Field(..., example="ABCD1234EFGH5678")
+    phone_code_hash: str = Field(..., example="AB34EFGH5678")
 
 class TokenResponse(BaseModel):
     access_token: str
