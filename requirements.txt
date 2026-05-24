@@ -1,0 +1,14 @@
+fastapi==0.95.2
+uvicorn==0.22.0
+python-dotenv==1.0.0
+telethon==1.28.5
+PyJWT==2.7.0
+python-multipart==0.0.6
+jinja2
+
+#1 python -m venv venv
+#2 .\venv\Scripts\activate
+#3 pip install -r requirements.txt
+#4 uvicorn main:app --reload --port 8000
+
+
