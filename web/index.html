@@ -1945,7 +1945,14 @@
                 
                 const senderName = msg.sender_name ? msg.sender_name.trim() : "";
                 const senderLabel = senderName ? `<div class="bubble-header">${senderName}</div>` : '';
-                const mediaBadge = msg.media ? '<span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-20 py-1 px-2 fs-8 rounded-pill mt-2 d-inline-block"><i class="fas fa-photo-film me-1"></i> Media Object</span>' : '';
+                
+                const mediaContainer = msg.media ? `
+                    <div class="media-container mt-2" id="media-container-${msg.id}">
+                        <button class="btn btn-sm btn-outline-info rounded-pill py-1 px-3 d-inline-flex align-items-center gap-1 fs-8" onclick="loadAndRenderMedia(${msg.id}, ${currentlySelectedChatID})">
+                            <i class="fas fa-circle-down"></i> Load / Play Media
+                        </button>
+                    </div>
+                ` : '';
                 
                 const bubbleHTML = `
                     <div class="message-bubble ${bubbleClass}">
@@ -1954,7 +1961,7 @@
                         </button>
                         ${senderLabel}
                         <div class="bubble-text">${msg.text || "<i>Empty message / media object</i>"}</div>
-                        ${mediaBadge}
+                        ${mediaContainer}
                         <div class="bubble-meta">${msg.date || "Unknown time"}</div>
                     </div>
                 `;
@@ -1963,6 +1970,97 @@
 
             // Scroll to bottom
             container.scrollTop(container[0].scrollHeight);
+        }
+
+        async function loadAndRenderMedia(messageId, chatId) {
+            const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+            if (!token) {
+                showToast("Authentication required", "error");
+                return;
+            }
+            
+            const container = $(`#media-container-${messageId}`);
+            container.html('<span class="text-info fs-8"><i class="fas fa-spinner fa-spin me-1"></i> Downloading media from Telegram...</span>');
+
+            try {
+                const response = await fetch(`/chats/media/download?chat_id=${chatId}&message_id=${messageId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(errText || "Failed to download media");
+                }
+
+                // Check content-type
+                const contentType = response.headers.get("content-type") || "";
+                const contentDisposition = response.headers.get("content-disposition") || "";
+                let filename = "media_file";
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename="?([^"]+)"?/);
+                    if (match) filename = match[1];
+                }
+
+                const blob = await response.blob();
+                const objectURL = URL.createObjectURL(blob);
+
+                // Render dynamic previews
+                if (contentType.startsWith("image/")) {
+                    container.html(`
+                        <div class="mt-2 media-preview-wrapper position-relative" style="max-width: 300px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                            <img src="${objectURL}" class="img-fluid" style="display: block; width: 100%; height: auto; cursor: pointer;" onclick="window.open('${objectURL}', '_blank')" alt="Media file" />
+                            <div class="p-2 bg-dark bg-opacity-75 d-flex justify-content-between align-items-center">
+                                <span class="text-white text-truncate fs-9" style="max-width: 180px;">${filename}</span>
+                                <a href="${objectURL}" download="${filename}" class="btn btn-xs btn-primary py-0 px-2 fs-9 rounded"><i class="fas fa-download"></i> Save</a>
+                            </div>
+                        </div>
+                    `);
+                } else if (contentType.startsWith("video/")) {
+                    container.html(`
+                        <div class="mt-2 media-preview-wrapper" style="max-width: 350px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                            <video src="${objectURL}" controls class="w-100" style="display: block;"></video>
+                            <div class="p-2 bg-dark bg-opacity-75 d-flex justify-content-between align-items-center">
+                                <span class="text-white text-truncate fs-9" style="max-width: 220px;">${filename}</span>
+                                <a href="${objectURL}" download="${filename}" class="btn btn-xs btn-primary py-0 px-2 fs-9 rounded"><i class="fas fa-download"></i> Save</a>
+                            </div>
+                        </div>
+                    `);
+                } else if (contentType.startsWith("audio/")) {
+                    container.html(`
+                        <div class="mt-2 media-preview-wrapper p-2 bg-dark bg-opacity-40 rounded" style="max-width: 300px; border: 1px solid rgba(255,255,255,0.1);">
+                            <audio src="${objectURL}" controls class="w-100 mb-1"></audio>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-white text-truncate fs-9" style="max-width: 180px;">${filename}</span>
+                                <a href="${objectURL}" download="${filename}" class="btn btn-xs btn-primary py-0 px-2 fs-9 rounded"><i class="fas fa-download"></i> Save</a>
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    // Document or fallback download
+                    container.html(`
+                        <div class="mt-2 d-flex align-items-center gap-2 p-2 bg-dark bg-opacity-40 rounded border border-secondary border-opacity-35" style="max-width: 300px;">
+                            <div class="bg-primary bg-opacity-20 text-primary rounded p-2 fs-5">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="text-white text-truncate fs-8 fw-semibold">${filename}</div>
+                                <div class="text-muted fs-9">${(blob.size / 1024 / 1024).toFixed(2)} MB • File</div>
+                            </div>
+                            <a href="${objectURL}" download="${filename}" class="btn btn-sm btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;"><i class="fas fa-download fs-8"></i></a>
+                        </div>
+                    `);
+                }
+            } catch (err) {
+                console.error(err);
+                container.html(`
+                    <div class="mt-2 text-danger fs-8">
+                        <i class="fas fa-circle-exclamation me-1"></i> Loading failed: ${err.message || "Unknown error"}
+                        <button class="btn btn-link p-0 fs-8 ms-2 text-decoration-underline" onclick="loadAndRenderMedia(${messageId}, ${chatId})">Retry</button>
+                    </div>
+                `);
+            }
         }
 
         // ==================== MESSAGING WORKFLOW SEND & DELETE ====================

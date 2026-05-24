@@ -364,3 +364,22 @@ async def get_messages_by_date(
     except Exception as e:
         logger.error(f"Messages by date error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/chats/media/download", tags=["Telegram Chats"])
+async def download_media_route(
+    chat_id: int = Query(..., description="The chat ID where the message is located"),
+    message_id: int = Query(..., description="The message ID that contains the media"),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Download or stream media from a specific message ID in a specific chat.
+    Uses local caching to avoid repeated downloads from Telegram API.
+    """
+    try:
+        file_path = await download_message_media(user["phone"], chat_id, message_id)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Media file not found after download.")
+        return FileResponse(file_path)
+    except Exception as e:
+        logger.error(f"Download media route error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))

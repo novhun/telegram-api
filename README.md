@@ -412,6 +412,15 @@ All protected API paths require the `Authorization: Bearer <token>` header.
   }
   ```
 
+#### 10. Download or Stream Message Media
+* **Endpoint**: `GET /chats/media/download`
+* **Headers**: `Authorization: Bearer <your_jwt_token>`
+* **Query Parameters**:
+  * `chat_id`: The integer ID of target chat/group.
+  * `message_id`: The integer ID of the specific message.
+* **Response (200 OK)**:
+  * Binary stream / file of the media item (e.g., JPEG, MP4, PDF, OGG) served with high-performance caching.
+
 ---
 
 ## 🚢 Production VPS Deployment

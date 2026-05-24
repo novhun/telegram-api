@@ -411,3 +411,39 @@ async def remove_from_group(phone: str, chat_id: int, user_id: str):
             raise e
         finally:
             await client.disconnect()
+
+async def download_message_media(phone: str, chat_id: int, message_id: int) -> str:
+    """
+    Download media from a specific message and return its local file path.
+    """
+    DOWNLOADS_DIR = "downloads"
+    os.makedirs(DOWNLOADS_DIR, exist_ok=True)
+
+    client = get_client(phone)
+    lock = get_lock(phone)
+    async with lock:
+        await client.start()
+        try:
+            # Fetch the specific message
+            msg = await client.get_messages(int(chat_id), ids=int(message_id))
+            if not msg or not msg.media:
+                raise Exception("Message does not contain any media object.")
+            
+            # Resolve extension
+            from telethon.utils import get_extension
+            ext = get_extension(msg.media) or ""
+            
+            # Define local save path
+            local_filename = f"{phone}_{chat_id}_{message_id}{ext}"
+            file_path = os.path.join(DOWNLOADS_DIR, local_filename)
+            
+            # Download file if it doesn't already exist locally (caching)
+            if not os.path.exists(file_path):
+                await client.download_media(msg, file=file_path)
+            
+            return file_path
+        except Exception as e:
+            logger.error(f"Download media failed for {phone}: {str(e)}")
+            raise e
+        finally:
+            await client.disconnect()

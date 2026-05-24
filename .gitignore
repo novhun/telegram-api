@@ -13,7 +13,7 @@ include/
 lib/
 share/
 pyvenv.cfg
-
+downloads/
 # Telegram session databases (extremely sensitive!)
 sessions/
 *.session
