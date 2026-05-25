@@ -434,6 +434,28 @@ All protected API paths require the `Authorization: Bearer <token>` header.
 * **Response (200 OK)**:
   * Binary stream / file of the media item (e.g., JPEG, MP4, PDF, OGG) served with high-performance caching.
 
+#### 11. Retrieve Group or Channel Members
+* **Endpoint**: `GET /chats/members`
+* **Headers**: `Authorization: Bearer <your_jwt_token>`
+* **Query Parameters**:
+  * `chat_id`: The integer ID of the target group or channel.
+  * `limit`: Maximum number of participants to retrieve (default: 100).
+* **Response (200 OK)**:
+  ```json
+  [
+    {
+      "id": 987654321,
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "username": "janesmith",
+      "phone": "1987654321",
+      "is_bot": false,
+      "verified": false,
+      "restricted": false
+    }
+  ]
+  ```
+
 ---
 
 ## 🚢 Production VPS Deployment

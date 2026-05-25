@@ -454,3 +454,34 @@ async def download_message_media(phone: str, chat_id: int, message_id: int) -> s
             raise e
         finally:
             await client.disconnect()
+
+async def get_group_members(phone: str, chat_id: int, limit: int = 100):
+    """
+    Retrieve participants/members of a specific group or channel.
+    """
+    client = get_client(phone)
+    lock = get_lock(phone)
+    async with lock:
+        await client.start()
+        try:
+            entity = await client.get_entity(int(chat_id))
+            participants = await client.get_participants(entity, limit=limit)
+            
+            members = []
+            for u in participants:
+                members.append({
+                    "id": u.id,
+                    "first_name": getattr(u, 'first_name', '') or '',
+                    "last_name": getattr(u, 'last_name', '') or '',
+                    "username": getattr(u, 'username', '') or '',
+                    "phone": getattr(u, 'phone', '') or '',
+                    "is_bot": getattr(u, 'bot', False),
+                    "verified": getattr(u, 'verified', False),
+                    "restricted": getattr(u, 'restricted', False)
+                })
+            return members
+        except Exception as e:
+            logger.error(f"Get group members failed for {phone}: {str(e)}")
+            raise e
+        finally:
+            await client.disconnect()

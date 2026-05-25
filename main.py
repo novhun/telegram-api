@@ -386,6 +386,21 @@ async def download_media_route(
         logger.error(f"Download media route error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/chats/members", tags=["Telegram Chats"])
+async def get_chats_members_route(
+    chat_id: int = Query(..., description="The chat or group ID to retrieve members for"),
+    limit: int = Query(100, description="The maximum number of members to load"),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Retrieve participants/members list of a specific Telegram chat, channel, or group.
+    """
+    try:
+        return await get_group_members(user["phone"], chat_id, limit)
+    except Exception as e:
+        logger.error(f"Get chats members route error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
 @app.get("/manifest.json", tags=["PWA"])
 async def get_pwa_manifest():
     """Expose manifest.json at the application root for PWA support."""
