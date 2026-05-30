@@ -392,6 +392,99 @@ async def get_own_groups(phone: str):
         finally:
             await client.disconnect()
 
+async def get_report_summary(phone: str):
+    """
+    Generate an aggregated telemetry audit report for the account.
+    """
+    from telethon.tl import functions
+    client = get_client(phone)
+    lock = get_lock(phone)
+    async with lock:
+        await client.start()
+        try:
+            # 1. Fetch dialogues and contacts in a single unified session
+            dialogs = await client.get_dialogs()
+            raw_contacts = await client(functions.contacts.GetContactsRequest(hash=0))
+            
+            # Serialize contacts
+            contacts = []
+            if raw_contacts and hasattr(raw_contacts, 'users'):
+                contacts = raw_contacts.users
+
+            # 2. Contacts Audit Breakdown
+            total_contacts = len(contacts)
+            mutual_count = 0
+            bot_count = 0
+            friends_count = 0
+            
+            for u in contacts:
+                is_bot = getattr(u, 'bot', False)
+                is_mutual = getattr(u, 'mutual', False)
+                if is_bot:
+                    bot_count += 1
+                elif is_mutual:
+                    mutual_count += 1
+                else:
+                    friends_count += 1
+
+            # 3. Dialogues & Chats Audit Breakdown
+            total_chats = len(dialogs)
+            groups_count = 0
+            channels_count = 0
+            dialogue_bots_count = 0
+            
+            # 4. Ownership Breakdown
+            own_groups = 0
+            own_channels = 0
+            
+            for d in dialogs:
+                is_group = d.is_group
+                is_channel = d.is_channel
+                is_bot = getattr(d.entity, 'bot', False)
+                is_creator = getattr(d.entity, 'creator', False)
+                
+                # dialogue type counts
+                if is_bot:
+                    dialogue_bots_count += 1
+                if is_group:
+                    groups_count += 1
+                if is_channel:
+                    channels_count += 1
+                
+                # ownership counts
+                if is_creator:
+                    is_megagroup = getattr(d.entity, 'megagroup', False)
+                    is_broadcast = is_channel and not is_megagroup
+                    if is_megagroup or is_group:
+                        own_groups += 1
+                    elif is_broadcast:
+                        own_channels += 1
+
+            return {
+                "contacts": {
+                    "friends": friends_count,
+                    "mutual": mutual_count,
+                    "none": bot_count,
+                    "all": total_contacts
+                },
+                "chats": {
+                    "total": total_chats,
+                    "groups": groups_count,
+                    "channels": channels_count,
+                    "bots": dialogue_bots_count
+                },
+                "ownership": {
+                    "own_groups": own_groups,
+                    "own_channels": own_channels,
+                    "own_bots": dialogue_bots_count or bot_count or 0
+                }
+            }
+        except Exception as e:
+            logger.error(f"Get report summary failed for {phone}: {str(e)}")
+            raise e
+        finally:
+            await client.disconnect()
+
 async def remove_from_group(phone: str, chat_id: int, user_id: str):
     """
     Remove/kick a user from a group or channel.

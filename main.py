@@ -416,6 +416,17 @@ async def get_chats_topics_route(
         logger.error(f"Get chats topics route error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/report/summary", tags=["Telegram Reports"])
+async def get_report_summary_route(user: dict = Depends(get_current_user)):
+    """
+    Retrieve aggregated audit and telemetry report statistics for the account.
+    """
+    try:
+        return await get_report_summary(user["phone"])
+    except Exception as e:
+        logger.error(f"Get report summary route error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
 @app.get("/manifest.json", tags=["PWA"])
 async def get_pwa_manifest():
     """Expose manifest.json at the application root for PWA support."""

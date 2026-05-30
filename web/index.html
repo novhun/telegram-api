@@ -3067,68 +3067,42 @@
             $("#reportPageLoader").show();
             $("#reportPageDashboard").hide();
 
-            // Run Promise.all to fetch lists in parallel for rapid response times
-            Promise.all([
-                fetch("/list-contacts", {
-                    method: "GET",
-                    headers: { "Authorization": "Bearer " + token }
-                }).then(res => { if (!res.ok) throw new Error(); return res.json(); }),
-                
-                fetch("/list-chats", {
-                    method: "GET",
-                    headers: { "Authorization": "Bearer " + token }
-                }).then(res => { if (!res.ok) throw new Error(); return res.json(); }),
-
-                fetch("/chats/list-own", {
-                    method: "GET",
-                    headers: { "Authorization": "Bearer " + token }
-                }).then(res => { if (!res.ok) throw new Error(); return res.json(); })
-            ])
-            .then(([contactsData, chatsData, ownChatsData]) => {
+            fetch("/report/summary", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Could not retrieve report summary statistics.");
+                return res.json();
+            })
+            .then(data => {
                 $("#reportPageLoader").hide();
 
                 // 1. Contacts Stats
-                const contacts = contactsData.contacts || [];
-                const totalContactsAll = contacts.length;
-                const mutualContacts = contacts.filter(c => c.mutual_contact === true).length;
-                const bots = contacts.filter(c => c.is_bot === true).length;
-                const friends = contacts.filter(c => c.mutual_contact === false && c.is_bot === false).length;
-
-                $("#statTotalContactsAll").text(totalContactsAll);
-                $("#statTotalContactsFriends").text(friends);
-                $("#statTotalContactsMutual").text(mutualContacts);
-                $("#statTotalContactsNone").text(bots);
-                $("#statTotalContactsAllBadge").text(totalContactsAll);
+                $("#statTotalContactsAll").text(data.contacts.all);
+                $("#statTotalContactsFriends").text(data.contacts.friends);
+                $("#statTotalContactsMutual").text(data.contacts.mutual);
+                $("#statTotalContactsNone").text(data.contacts.none);
+                $("#statTotalContactsAllBadge").text(data.contacts.all);
 
                 // 2. Chats / Dialogues Stats
-                const chats = chatsData || [];
-                $("#statTotalChat").text(chats.length);
-
-                const groupsCount = chats.filter(c => c.is_group === true).length;
-                const channelsCount = chats.filter(c => c.is_channel === true).length;
-                const dialogueBotsCount = chats.filter(c => c.is_bot === true).length;
-
-                $("#statTotalGroup").text(groupsCount);
-                $("#statTotalChannel").text(channelsCount);
-                $("#statTotalBot").text(dialogueBotsCount);
+                $("#statTotalChat").text(data.chats.total);
+                $("#statTotalGroup").text(data.chats.groups);
+                $("#statTotalChannel").text(data.chats.channels);
+                $("#statTotalBot").text(data.chats.bots);
 
                 // 3. Ownership Stats
-                const ownChats = ownChatsData || [];
-                const ownGroupsCount = ownChats.filter(c => c.type === "supergroup" || c.type === "group").length;
-                const ownChannelsCount = ownChats.filter(c => c.type === "channel").length;
-                
-                // Count own bots: either dialogue bots or any bot in contacts list
-                const ownBotsCount = dialogueBotsCount || bots || 0;
-
-                $("#statTotalOwnGroup").text(ownGroupsCount);
-                $("#statTotalOwnChannel").text(ownChannelsCount);
-                $("#statTotalOwnBot").text(ownBotsCount);
+                $("#statTotalOwnGroup").text(data.ownership.own_groups);
+                $("#statTotalOwnChannel").text(data.ownership.own_channels);
+                $("#statTotalOwnBot").text(data.ownership.own_bots);
 
                 $("#reportPageDashboard").show();
             })
             .catch(err => {
                 $("#reportPageLoader").hide();
-                showToast("Failed to aggregate reports telemetry. Please ensure your Telegram session is active.", "error");
+                showToast("Failed to aggregate report telemetry: " + err.message, "error");
             });
         }
 

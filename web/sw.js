@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tg-console-cache-v4';
+const CACHE_NAME = 'tg-console-cache-v5';
 const ASSETS = [
   '/',
   '/manifest.json',
