@@ -19,11 +19,13 @@ class TokenResponse(BaseModel):
 class MessageRequest(BaseModel):
     chat_id: int = Field(..., example=-4586738257)
     message: str = Field(..., example="Hello, this is a test message!")
+    reply_to: Optional[int] = Field(None, description="Optional message/topic ID to reply to")
 
 class FileMessageRequest(BaseModel):
     chat_id: int = Field(..., example=-4586738257)
     file_path: str = Field(..., example="C:/Users/HUN/Desktop/sample.jpg")
     caption: Optional[str] = None  # Optional caption
+    reply_to: Optional[int] = Field(None, description="Optional message/topic ID to reply to")
 
 class DeleteRequest(BaseModel):
     chat_id: int

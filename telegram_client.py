@@ -186,15 +186,26 @@ async def get_dialogs(phone):
         await client.start()
         dialogs = await client.get_dialogs()
         await client.disconnect()
-        return [{"id": d.id, "name": d.name, "title": d.title} for d in dialogs]
+        return [
+            {
+                "id": d.id,
+                "name": d.name,
+                "title": d.title,
+                "is_user": d.is_user,
+                "is_group": d.is_group,
+                "is_channel": d.is_channel,
+                "is_bot": getattr(d.entity, 'bot', False)
+            }
+            for d in dialogs
+        ]
 
-async def send_message(phone, chat_id, message):
+async def send_message(phone, chat_id, message, reply_to=None):
     client = get_client(phone)
     lock = get_lock(phone)
     async with lock:
         await client.start()
         entity = await client.get_entity(int(chat_id))
-        msg = await client.send_message(entity, message)
+        msg = await client.send_message(entity, message, reply_to=reply_to)
         await client.disconnect()
         return {
             "success": True,
@@ -202,9 +213,9 @@ async def send_message(phone, chat_id, message):
             "chat_id": int(chat_id),
             "date": msg.date.isoformat() if msg.date else None
         }
-async def send_file_message(phone: str, chat_id: int, file_path: str, caption: str = None):
+async def send_file_message(phone: str, chat_id: int, file_path: str, caption: str = None, reply_to: int = None):
     """
-    Send a file (image, video, document, etc.) to a chat with optional caption.
+    Send a file (image, video, document, etc.) to a chat with optional caption and thread/topic ID.
     """
     client = get_client(phone)
     lock = get_lock(phone)
@@ -212,7 +223,7 @@ async def send_file_message(phone: str, chat_id: int, file_path: str, caption: s
     async with lock:
         await client.start()
         entity = await client.get_entity(int(chat_id))  # Resolve chat entity
-        msg = await client.send_file(entity, file=file_path, caption=caption)
+        msg = await client.send_file(entity, file=file_path, caption=caption, reply_to=reply_to)
         await client.disconnect()
 
         return {
@@ -364,12 +375,13 @@ async def get_own_groups(phone: str):
             dialogs = await client.get_dialogs()
             own_chats = []
             for d in dialogs:
-                if (d.is_group or d.is_channel) and getattr(d.entity, 'creator', False):
+                    is_megagroup = getattr(d.entity, 'megagroup', False)
+                    is_broadcast = d.is_channel and not is_megagroup
                     own_chats.append({
                         "id": d.id,
                         "name": d.name,
                         "title": d.title,
-                        "type": "supergroup/channel" if d.is_channel else "group",
+                        "type": "supergroup" if is_megagroup else ("channel" if is_broadcast else "group"),
                         "username": getattr(d.entity, 'username', None)
                     })
             return own_chats
@@ -482,6 +494,43 @@ async def get_group_members(phone: str, chat_id: int, limit: int = 100):
             return members
         except Exception as e:
             logger.error(f"Get group members failed for {phone}: {str(e)}")
+            raise e
+        finally:
+            await client.disconnect()
+
+async def get_forum_topics(phone: str, chat_id: int, limit: int = 100):
+    """
+    Retrieve list of forum topics from a supergroup.
+    """
+    from telethon.tl import functions
+    client = get_client(phone)
+    lock = get_lock(phone)
+    async with lock:
+        await client.start()
+        try:
+            entity = await client.get_entity(int(chat_id))
+            result = await client(functions.channels.GetForumTopicsRequest(
+                channel=entity,
+                offset_date=None,
+                offset_id=0,
+                offset_topic=0,
+                limit=limit
+            ))
+            
+            topics = []
+            if result and hasattr(result, 'topics'):
+                for t in result.topics:
+                    topics.append({
+                        "id": t.id,
+                        "title": getattr(t, 'title', 'Unnamed Topic') or 'Unnamed Topic',
+                        "icon_color": getattr(t, 'icon_color', None),
+                        "closed": getattr(t, 'closed', False),
+                        "pinned": getattr(t, 'pinned', False),
+                        "top_message": getattr(t, 'top_message', None)
+                    })
+            return topics
+        except Exception as e:
+            logger.error(f"Get forum topics failed for {phone}: {str(e)}")
             raise e
         finally:
             await client.disconnect()

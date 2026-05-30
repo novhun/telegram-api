@@ -299,7 +299,8 @@ All protected API paths require the `Authorization: Bearer <token>` header.
   ```json
   {
     "chat_id": 987654321,
-    "message": "Hello from FastAPI!"
+    "message": "Hello from FastAPI!",
+    "reply_to": 10562  // Optional topic or message thread ID
   }
   ```
 * **Response (200 OK)**:
@@ -319,7 +320,8 @@ All protected API paths require the `Authorization: Bearer <token>` header.
   {
     "chat_id": 987654321,
     "file_path": "/absolute/path/to/report.pdf",
-    "caption": "Quarterly Performance Report"
+    "caption": "Quarterly Performance Report",
+    "reply_to": 10562  // Optional topic or message thread ID
   }
   ```
 * **Response (200 OK)**:

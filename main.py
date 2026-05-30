@@ -247,7 +247,7 @@ async def send_message_route(
     user: dict = Depends(get_current_user)
 ):
     try:
-        return await send_message(user["phone"], req.chat_id, req.message)
+        return await send_message(user["phone"], req.chat_id, req.message, reply_to=req.reply_to)
     except Exception as e:
         logger.error(f"Send message error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -258,10 +258,10 @@ async def send_file_route(
     user: dict = Depends(get_current_user)
 ):
     """
-    Send a file with optional caption to a Telegram chat.
+    Send a file with optional caption and thread/topic ID to a Telegram chat.
     """
     try:
-        return await send_file_message(user["phone"], req.chat_id, req.file_path, req.caption)
+        return await send_file_message(user["phone"], req.chat_id, req.file_path, req.caption, reply_to=req.reply_to)
     except Exception as e:
         logger.error(f"Send file error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -399,6 +399,21 @@ async def get_chats_members_route(
         return await get_group_members(user["phone"], chat_id, limit)
     except Exception as e:
         logger.error(f"Get chats members route error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/chats/topics", tags=["Telegram Chats"])
+async def get_chats_topics_route(
+    chat_id: int = Query(..., description="The forum supergroup ID to retrieve topics from"),
+    limit: int = Query(100, description="The maximum number of topics to load"),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Retrieve list of forum topics inside a specific Telegram supergroup.
+    """
+    try:
+        return await get_forum_topics(user["phone"], chat_id, limit)
+    except Exception as e:
+        logger.error(f"Get chats topics route error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/manifest.json", tags=["PWA"])

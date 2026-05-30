@@ -1047,6 +1047,18 @@
                             <span>Own Groups</span>
                         </a>
                     </li>
+                    <li class="sidebar-nav-item">
+                        <a class="sidebar-nav-link" data-target="viewGroupTopics" id="navLinkGroupTopics">
+                            <i class="fas fa-list-check"></i>
+                            <span>Group Topics</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a class="sidebar-nav-link" data-target="viewReportPage" id="navLinkReportPage">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Report Page</span>
+                        </a>
+                    </li>
                     <li class="sidebar-nav-item" id="pwaInstallItem" style="display: none;">
                         <a id="btnInstallPWA" class="sidebar-nav-link text-warning" style="cursor: pointer;">
                             <i class="fas fa-circle-down text-warning"></i>
@@ -1229,6 +1241,14 @@
                                     </div>
                                 </div>
 
+                                <!-- Forum Topics Bar -->
+                                <div id="forumTopicsBar" class="bg-dark bg-opacity-30 border-bottom border-secondary border-opacity-10 py-2 px-3 d-flex align-items-center gap-2" style="display: none !important;">
+                                    <span class="text-muted fs-8"><i class="fas fa-comments text-info me-1"></i> Forum Topics:</span>
+                                    <select id="selectForumTopics" class="form-select form-select-sm bg-dark bg-opacity-50 text-white border-secondary border-opacity-35 rounded-pill px-3 shadow-none fs-8" style="width: auto; max-width: 250px; border: 1px solid rgba(255,255,255,0.15); height: 26px; line-height: 26px; padding-top:0; padding-bottom:0;">
+                                        <option value="">All Topics</option>
+                                    </select>
+                                </div>
+
                                 <!-- History Bubbles -->
                                 <div id="threadHistoryBox" class="chat-thread-history">
                                     <!-- Populated dynamically -->
@@ -1236,6 +1256,11 @@
 
                                 <!-- Active Bottom input Bar -->
                                 <div class="chat-thread-input-bar">
+                                    <!-- Topic ID optional field for Forums -->
+                                    <div class="mb-2 d-flex align-items-center gap-2">
+                                        <span class="text-muted fs-8"><i class="fas fa-comments text-info me-1"></i> Send to Topic ID:</span>
+                                        <input type="number" id="inputTopicID" class="form-control form-control-glass py-0 px-2 fs-8 shadow-none" placeholder="Topic Msg ID (Optional)" style="width: 150px; border: 1px solid rgba(255, 255, 255, 0.1); height: 24px; line-height: 24px;">
+                                    </div>
                                     
                                     <!-- Form 1: Text message -->
                                     <form id="formSendTextMessage">
@@ -1344,6 +1369,195 @@
                     <div id="ownGroupsContainer" class="contacts-grid" style="display:none;"></div>
                 </div>
 
+                <!-- SUBVIEW 5: GROUP TOPICS -->
+                <div id="viewGroupTopics" class="dash-view">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h3 class="font-display m-0">Group Topics Directory</h3>
+                            <p class="text-muted m-0">Explore, view details, and manage forum topics inside a selected Telegram Group</p>
+                        </div>
+                    </div>
+
+                    <!-- Forum Selection Area -->
+                    <div class="glass-card p-4 mb-4">
+                        <div class="row align-items-end g-3">
+                            <div class="col-md-6 col-12">
+                                <label class="form-label text-muted fs-8 fw-bold text-uppercase mb-2">Select Supergroup / Channel:</label>
+                                <div class="d-flex flex-column gap-2">
+                                    <input type="text" id="inputTopicGroupSearch" class="form-control form-control-sm bg-dark bg-opacity-50 text-white border-secondary border-opacity-35 rounded-pill px-3 shadow-none fs-8" placeholder="🔍 Type to search groups..." style="border: 1px solid rgba(255,255,255,0.15); height: 28px; line-height: 28px;">
+                                    <select id="selectTopicGroup" class="form-select bg-dark bg-opacity-50 text-white border-secondary border-opacity-35 rounded-3 py-2 px-3 shadow-none">
+                                        <option value="" disabled selected>Choose a supergroup...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <button id="btnRefreshTopics" class="premium-btn w-100 rounded-3 py-2" disabled>
+                                    <i class="fas fa-rotate me-2"></i>Fetch Topics
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loader -->
+                    <div id="groupTopicsLoader" class="text-center py-5" style="display: none;">
+                        <div class="spinner-border text-info" role="status"></div>
+                        <p class="text-muted mt-3">Fetching forum threads from Telegram MTProto...</p>
+                    </div>
+
+                    <!-- Empty State / Welcome -->
+                    <div id="groupTopicsEmptyState" class="glass-card text-center py-5">
+                        <i class="fas fa-comments text-info fs-1 mb-3"></i>
+                        <h5>No Supergroup Selected</h5>
+                        <p class="text-muted max-w-400 mx-auto fs-7">Choose a supergroup from the dropdown list above to explore all its active and pinned forum topics.</p>
+                    </div>
+
+                    <!-- Topics Table Container -->
+                    <div id="groupTopicsTableContainer" class="glass-card overflow-hidden" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover border-0 align-middle m-0 fs-8">
+                                <thead class="bg-dark bg-opacity-40 text-muted border-bottom border-secondary border-opacity-15">
+                                    <tr>
+                                        <th class="py-3 px-4" style="width: 100px;">Topic ID</th>
+                                        <th class="py-3 px-4">Title / Name</th>
+                                        <th class="py-3 px-4" style="width: 120px;">Pinned</th>
+                                        <th class="py-3 px-4" style="width: 120px;">Status</th>
+                                        <th class="py-3 px-4" style="width: 150px;">Top Message ID</th>
+                                        <th class="py-3 px-4 text-end" style="width: 150px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="groupTopicsTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBVIEW 6: REPORT PAGE -->
+                <div id="viewReportPage" class="dash-view">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h3 class="font-display m-0">Telegram Performance & Audit Report</h3>
+                            <p class="text-muted m-0">In-depth statistical metrics, directories breakdown, and account telemetry</p>
+                        </div>
+                        <button id="btnRefreshReport" class="premium-btn rounded-3 py-2 px-4">
+                            <i class="fas fa-arrows-rotate me-2"></i>Generate Report
+                        </button>
+                    </div>
+
+                    <!-- Loader -->
+                    <div id="reportPageLoader" class="text-center py-5" style="display: none;">
+                        <div class="spinner-border text-info" role="status"></div>
+                        <p class="text-muted mt-3">Aggregating telemetry from Telegram MTProto...</p>
+                    </div>
+
+                    <!-- Main Report Dashboard Grid -->
+                    <div id="reportPageDashboard" style="display: none;">
+                        <!-- Contacts breakdown card -->
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6 col-12">
+                                <div class="glass-card p-4 h-100 position-relative overflow-hidden" style="border: 1px solid rgba(0, 180, 216, 0.25);">
+                                    <div class="position-absolute top-0 end-0 p-3 text-info opacity-10 fs-1"><i class="fas fa-users"></i></div>
+                                    <h5 class="text-info fw-bold mb-3"><i class="fas fa-id-card me-2"></i>Contacts Breakdown</h5>
+                                    
+                                    <div class="d-flex align-items-baseline mb-4">
+                                        <h1 id="statTotalContactsAll" class="display-4 fw-bold m-0 text-white">0</h1>
+                                        <span class="text-muted ms-2 fs-7">Total Contacts (All / A)</span>
+                                    </div>
+                                    
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-10 pb-2">
+                                            <span class="text-muted"><i class="fas fa-user-tag text-white-50 me-2"></i>Friends (F) <span class="fs-9 opacity-50">(Non-mutual)</span></span>
+                                            <span id="statTotalContactsFriends" class="badge bg-secondary bg-opacity-25 text-white fw-bold py-1 px-3 fs-8 rounded-pill">0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-10 pb-2">
+                                            <span class="text-muted"><i class="fas fa-arrows-left-right text-info me-2"></i>Mutual (M) <span class="fs-9 opacity-50">(Mutual connection)</span></span>
+                                            <span id="statTotalContactsMutual" class="badge bg-info bg-opacity-20 text-info fw-bold py-1 px-3 fs-8 rounded-pill">0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-10 pb-2">
+                                            <span class="text-muted"><i class="fas fa-user-slash text-white-50 me-2"></i>None (N) <span class="fs-9 opacity-50">(Bots / Other)</span></span>
+                                            <span id="statTotalContactsNone" class="badge bg-danger bg-opacity-20 text-danger fw-bold py-1 px-3 fs-8 rounded-pill">0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted"><i class="fas fa-circle-check text-success me-2"></i>All Contacts (A)</span>
+                                            <span id="statTotalContactsAllBadge" class="badge bg-success bg-opacity-20 text-success fw-bold py-1 px-3 fs-8 rounded-pill">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dialogs stats card -->
+                            <div class="col-md-6 col-12">
+                                <div class="glass-card p-4 h-100 position-relative overflow-hidden" style="border: 1px solid rgba(139, 92, 246, 0.25);">
+                                    <div class="position-absolute top-0 end-0 p-3 text-purple opacity-10 fs-1"><i class="fas fa-comments"></i></div>
+                                    <h5 class="text-purple fw-bold mb-3" style="color: #a78bfa !important;"><i class="fas fa-chart-pie me-2"></i>Dialogues & Chats</h5>
+                                    
+                                    <div class="d-flex align-items-baseline mb-4">
+                                        <h1 id="statTotalChat" class="display-4 fw-bold m-0 text-white">0</h1>
+                                        <span class="text-muted ms-2 fs-7">Active Chat Threads</span>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-10 pb-2">
+                                            <span class="text-muted"><i class="fas fa-users-rectangle text-white-50 me-2"></i>Total Group</span>
+                                            <span id="statTotalGroup" class="badge bg-secondary bg-opacity-25 text-white fw-bold py-1 px-3 fs-8 rounded-pill">0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-10 pb-2">
+                                            <span class="text-muted"><i class="fas fa-bullhorn text-warning me-2"></i>Total Channel</span>
+                                            <span id="statTotalChannel" class="badge bg-warning bg-opacity-20 text-warning fw-bold py-1 px-3 fs-8 rounded-pill">0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted"><i class="fas fa-robot text-info me-2"></i>Total Bot</span>
+                                            <span id="statTotalBot" class="badge bg-info bg-opacity-20 text-info fw-bold py-1 px-3 fs-8 rounded-pill">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ownership stats card -->
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <div class="glass-card p-4 position-relative overflow-hidden" style="border: 1px solid rgba(244, 63, 94, 0.25);">
+                                    <div class="position-absolute top-0 end-0 p-3 text-danger opacity-10 fs-1"><i class="fas fa-crown"></i></div>
+                                    <h5 class="text-danger fw-bold mb-4"><i class="fas fa-shield-halved me-2"></i>Directory Ownership Telemetry</h5>
+                                    
+                                    <div class="row g-4">
+                                        <div class="col-md-4 col-12 text-center border-end border-secondary border-opacity-15">
+                                            <h2 id="statTotalOwnGroup" class="display-5 fw-bold text-white mb-1">0</h2>
+                                            <p class="text-muted m-0"><i class="fas fa-crown text-danger me-1"></i>Total Own Group</p>
+                                            <span class="fs-9 opacity-50 text-white-50">(Groups & Megagroups created by you)</span>
+                                        </div>
+                                        <div class="col-md-4 col-12 text-center border-end border-secondary border-opacity-15">
+                                            <h2 id="statTotalOwnChannel" class="display-5 fw-bold text-white mb-1">0</h2>
+                                            <p class="text-muted m-0"><i class="fas fa-bullhorn text-warning me-1"></i>Total Own Channel</p>
+                                            <span class="fs-9 opacity-50 text-white-50">(Broadcast channels created by you)</span>
+                                        </div>
+                                        <div class="col-md-4 col-12 text-center">
+                                            <h2 id="statTotalOwnBot" class="display-5 fw-bold text-white mb-1">0</h2>
+                                            <p class="text-muted m-0"><i class="fas fa-robot text-info me-1"></i>Total Own Bot</p>
+                                            <span class="fs-9 opacity-50 text-white-50">(Bots owned / interacted in chats)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Extra Telemetry Summary Card -->
+                        <div class="glass-card p-4 mt-4 bg-dark bg-opacity-20 border border-secondary border-opacity-10 rounded-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success" style="width: 48px; height: 48px; font-size: 20px;">
+                                    <i class="fas fa-circle-check"></i>
+                                </div>
+                                <div>
+                                    <h6 class="m-0 text-white fw-bold">Telemetry Clean & Completed</h6>
+                                    <p class="text-muted m-0 fs-8">All performance metrics and accounts directories match exactly. Telegram session is highly active and optimized.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -1361,6 +1575,7 @@
         let cachedContactsList = [];
         let currentlySelectedChatID = null;
         let currentlyActiveChatType = "all"; // all, text, media
+        let activeLoadedMessages = [];
 
         // PWA Installation Prompter
         let deferredPrompt;
@@ -1449,6 +1664,12 @@
                 } else if (targetViewId === "viewOwnGroups") {
                     loadOwnGroups();
                     $("#globalHeaderSearchContainer").show().find("input").attr("placeholder", "Search owned groups...").val("");
+                } else if (targetViewId === "viewGroupTopics") {
+                    loadGroupTopicsDashboard();
+                    $("#globalHeaderSearchContainer").hide();
+                } else if (targetViewId === "viewReportPage") {
+                    generateAccountReport();
+                    $("#globalHeaderSearchContainer").hide();
                 } else {
                     $("#globalHeaderSearchContainer").hide();
                 }
@@ -1611,16 +1832,40 @@
 
             // Inline Thread Messages Search handler
             $("#inputMessagesSearch").on("keyup", function() {
+                applyTopicAndSearchFilters();
+            });
+
+            // Forum Topics change handler
+            $("#selectForumTopics").on("change", function() {
+                const topicID = $(this).val();
+                $("#inputTopicID").val(topicID);
+                applyTopicAndSearchFilters();
+            });
+
+            // Group topics dashboard selection handler
+            $("#selectTopicGroup").on("change", function() {
+                $("#btnRefreshTopics").prop("disabled", false);
+                fetchTopicsForGroupDashboard();
+            });
+
+            $("#btnRefreshTopics").click(function() {
+                fetchTopicsForGroupDashboard();
+            });
+
+            // Filter Select Group dropdown search keyup handler
+            $("#inputTopicGroupSearch").on("keyup", function() {
                 const searchVal = $(this).val().toLowerCase();
-                $(".message-bubble").each(function() {
-                    const text = $(this).find(".bubble-text").text().toLowerCase();
-                    const sender = $(this).find(".bubble-header").text().toLowerCase();
-                    if (text.includes(searchVal) || sender.includes(searchVal)) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
+                const filtered = cachedTopicsGroupChats.filter(chat => {
+                    const name = (chat.name || chat.title || "").toLowerCase();
+                    const id = String(chat.id);
+                    return name.includes(searchVal) || id.includes(searchVal);
                 });
+                renderTopicGroupSelect(filtered);
+            });
+
+            // Report Page Refresh button
+            $("#btnRefreshReport").click(function() {
+                generateAccountReport();
             });
         });
 
@@ -2055,6 +2300,9 @@
 
             $("#threadHistoryBox").html('<div class="text-center py-5 my-auto"><div class="spinner-border text-info"></div><p class="text-muted mt-3">Fetching thread log...</p></div>');
 
+            // Load topics for this chat if it's a forum supergroup
+            loadForumTopics(chatID);
+
             fetch(`/chats/list-messages/${type}?chat_id=${chatID}`, {
                 method: "GET",
                 headers: {
@@ -2066,7 +2314,9 @@
                 return res.json();
             })
             .then(data => {
-                renderThreadHistoryDOM(data.messages || []);
+                activeLoadedMessages = data.messages || [];
+                renderThreadHistoryDOM(activeLoadedMessages);
+                applyTopicAndSearchFilters();
             })
             .catch(err => {
                 showToast(err.message, "error");
@@ -2100,15 +2350,24 @@
                         </button>
                     </div>
                 ` : '';
+
+                const topicBadge = msg.reply_to ? `
+                    <div class="mt-1">
+                        <span class="badge bg-secondary bg-opacity-25 text-white-50 border border-secondary border-opacity-20 py-1 px-2 fs-9 rounded-pill" onclick="jumpToMessage(${msg.reply_to})" title="Jump to thread topic message" style="cursor: pointer;">
+                            <i class="fas fa-comments text-info me-1"></i> Topic ID: ${msg.reply_to}
+                        </span>
+                    </div>
+                ` : '';
                 
                 const bubbleHTML = `
-                    <div class="message-bubble ${bubbleClass}">
+                    <div class="message-bubble ${bubbleClass}" data-msg-id="${msg.id}">
                         <button class="bubble-delete-btn" onclick="deleteMessage(${msg.id})">
                             <i class="fas fa-trash-can"></i>
                         </button>
                         ${senderLabel}
                         <div class="bubble-text">${msg.text || "<i>Empty message / media object</i>"}</div>
                         ${mediaContainer}
+                        ${topicBadge}
                         <div class="bubble-meta">${msg.date || "Unknown time"}</div>
                     </div>
                 `;
@@ -2117,6 +2376,88 @@
 
             // Scroll to bottom
             container.scrollTop(container[0].scrollHeight);
+        }
+
+        function jumpToMessage(msgID) {
+            const element = $(`.message-bubble[data-msg-id="${msgID}"]`);
+            if (element.length) {
+                const container = $("#threadHistoryBox");
+                container.animate({
+                    scrollTop: container.scrollTop() + element.position().top - container.position().top - 40
+                }, 500);
+                
+                // Flash the target element with a premium glow
+                element.css("background", "rgba(0, 136, 204, 0.3)");
+                element.css("box-shadow", "0 0 15px rgba(0, 136, 204, 0.5)");
+                setTimeout(() => {
+                    element.css("background", "");
+                    element.css("box-shadow", "");
+                }, 1800);
+            } else {
+                // Pre-populate the Topic ID input field
+                $("#inputTopicID").val(msgID);
+                showToast(`Focused on Topic/Thread ID: ${msgID}. You can now send replies directly!`, "success");
+            }
+        }
+
+        function loadForumTopics(chatID) {
+            const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+            if (!token) return;
+
+            // Initially hide the bar and clear select
+            $("#forumTopicsBar").attr("style", "display: none !important;");
+            $("#selectForumTopics").html('<option value="">All Topics</option>');
+            $("#inputTopicID").val('');
+
+            fetch(`/chats/topics?chat_id=${chatID}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Not a forum or failed to fetch topics.");
+                return res.json();
+            })
+            .then(topics => {
+                if (topics && topics.length > 0) {
+                    // Populate select options
+                    topics.forEach(t => {
+                        $("#selectForumTopics").append(`<option value="${t.id}">${t.title} (ID: ${t.id})</option>`);
+                    });
+                    // Show the bar
+                    $("#forumTopicsBar").attr("style", "display: flex !important;");
+                }
+            })
+            .catch(err => {
+                console.log("Forum topics not fetched or not a forum:", err);
+            });
+        }
+
+        function applyTopicAndSearchFilters() {
+            const searchVal = $("#inputMessagesSearch").val().toLowerCase();
+            const selectedTopicID = $("#selectForumTopics").val();
+
+            $(".message-bubble").each(function() {
+                const msgID = $(this).attr("data-msg-id");
+                const msgObj = activeLoadedMessages.find(m => m.id == msgID);
+                
+                const text = $(this).find(".bubble-text").text().toLowerCase();
+                const sender = $(this).find(".bubble-header").text().toLowerCase();
+
+                const matchesSearch = text.includes(searchVal) || sender.includes(searchVal);
+                
+                let matchesTopic = true;
+                if (selectedTopicID) {
+                    matchesTopic = msgObj && (msgObj.reply_to == selectedTopicID);
+                }
+
+                if (matchesSearch && matchesTopic) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
         }
 
         async function loadAndRenderMedia(messageId, chatId) {
@@ -2215,6 +2556,8 @@
             const token = localStorage.getItem(STORAGE_TOKEN_KEY);
             const chatID = currentlySelectedChatID;
             const messageText = $("#inputTextMessage").val().trim();
+            const topicIDVal = $("#inputTopicID").val().trim();
+            const topicID = topicIDVal ? parseInt(topicIDVal, 10) : null;
 
             if (!token || !chatID || !messageText) return;
 
@@ -2228,7 +2571,8 @@
                 },
                 body: JSON.stringify({
                     chat_id: chatID,
-                    message: messageText
+                    message: messageText,
+                    reply_to: topicID
                 })
             })
             .then(res => {
@@ -2253,6 +2597,8 @@
             const chatID = currentlySelectedChatID;
             const filePath = $("#inputFileLocation").val().trim();
             const caption = $("#inputFileCaption").val().trim() || null;
+            const topicIDVal = $("#inputTopicID").val().trim();
+            const topicID = topicIDVal ? parseInt(topicIDVal, 10) : null;
 
             if (!token || !chatID || !filePath) return;
 
@@ -2267,7 +2613,8 @@
                 body: JSON.stringify({
                     chat_id: chatID,
                     file_path: filePath,
-                    caption: caption
+                    caption: caption,
+                    reply_to: topicID
                 })
             })
             .then(res => {
@@ -2556,6 +2903,233 @@
                     loadConversationHistory(chatID, currentlyActiveChatType);
                 }
             }, 300);
+        }
+
+        // ==================== SUBVIEW 5: GROUP TOPICS ====================
+        let cachedTopicsGroupChats = [];
+
+        function loadGroupTopicsDashboard() {
+            const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+            if (!token) return;
+
+            // Clear select, search input and hide details
+            $("#inputTopicGroupSearch").val('');
+            $("#selectTopicGroup").html('<option value="" disabled selected>Choose a supergroup...</option>');
+            $("#btnRefreshTopics").prop("disabled", true);
+            $("#groupTopicsTableContainer").hide();
+            $("#groupTopicsEmptyState").html(`
+                <i class="fas fa-comments text-info fs-1 mb-3"></i>
+                <h5>No Supergroup Selected</h5>
+                <p class="text-muted max-w-400 mx-auto fs-7">Choose a supergroup from the dropdown list above to explore all its active and pinned forum topics.</p>
+            `).show();
+            $("#groupTopicsLoader").hide();
+
+            // Fetch dialogs to populate dropdown
+            fetch("/list-chats", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Could not retrieve dialogue list.");
+                return res.json();
+            })
+            .then(chats => {
+                cachedTopicsGroupChats = chats || [];
+                renderTopicGroupSelect(cachedTopicsGroupChats);
+            })
+            .catch(err => {
+                showToast("Failed to load groups list: " + err.message, "error");
+            });
+        }
+
+        function renderTopicGroupSelect(chats) {
+            const selectEl = $("#selectTopicGroup");
+            const currentSelected = selectEl.val();
+            
+            selectEl.html('<option value="" disabled selected>Choose a supergroup...</option>');
+            chats.forEach(chat => {
+                const displayName = chat.name || chat.title || "Unnamed Chat";
+                selectEl.append(`<option value="${chat.id}">${displayName} (ID: ${chat.id})</option>`);
+            });
+
+            if (currentSelected && chats.some(c => c.id == currentSelected)) {
+                selectEl.val(currentSelected);
+            }
+        }
+
+        function fetchTopicsForGroupDashboard() {
+            const chatID = $("#selectTopicGroup").val();
+            const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+            if (!chatID || !token) return;
+
+            $("#groupTopicsLoader").show();
+            $("#groupTopicsEmptyState").hide();
+            $("#groupTopicsTableContainer").hide();
+
+            fetch(`/chats/topics?chat_id=${chatID}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("This group is not a forum supergroup, or failed to fetch topics.");
+                return res.json();
+            })
+            .then(topics => {
+                $("#groupTopicsLoader").hide();
+                const tbody = $("#groupTopicsTableBody");
+                tbody.empty();
+
+                if (!topics || topics.length === 0) {
+                    $("#groupTopicsLoader").hide();
+                    $("#groupTopicsEmptyState").html(`
+                        <i class="fas fa-triangle-exclamation text-warning fs-1 mb-3"></i>
+                        <h5>No Topics Found</h5>
+                        <p class="text-muted max-w-400 mx-auto fs-7">This group is a forum, but no topics have been created yet, or they couldn't be loaded.</p>
+                    `).show();
+                    return;
+                }
+
+                topics.forEach(t => {
+                    const isClosed = t.closed ? '<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 py-1 px-2 rounded-pill">Closed</span>' : '<span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 py-1 px-2 rounded-pill">Active</span>';
+                    const isPinned = t.pinned ? '<span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25 py-1 px-2 rounded-pill"><i class="fas fa-thumbtack me-1"></i>Pinned</span>' : '<span class="text-muted-50">No</span>';
+                    const topMsg = t.top_message ? t.top_message : 'N/A';
+                    
+                    // Simple escape of titles for the single-quote onclick parameter
+                    const escapedTitle = t.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                    const rowHTML = `
+                        <tr>
+                            <td class="py-3 px-4 fw-bold text-white-50">${t.id}</td>
+                            <td class="py-3 px-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-info bg-opacity-10 text-info" style="width: 28px; height: 28px; font-size: 11px;">
+                                        <i class="fas fa-comments"></i>
+                                    </div>
+                                    <span class="fw-semibold text-white">${t.title}</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">${isPinned}</td>
+                            <td class="py-3 px-4">${isClosed}</td>
+                            <td class="py-3 px-4 text-muted">${topMsg}</td>
+                            <td class="py-3 px-4 text-end">
+                                <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fs-9 d-inline-flex align-items-center gap-1" onclick="quickChatToTopic('${chatID}', '${t.id}', '${escapedTitle}')">
+                                    <i class="fas fa-comment-dots"></i> Quick Chat
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(rowHTML);
+                });
+
+                $("#groupTopicsTableContainer").show();
+            })
+            .catch(err => {
+                $("#groupTopicsLoader").hide();
+                $("#groupTopicsEmptyState").html(`
+                    <i class="fas fa-circle-exclamation text-danger fs-1 mb-3"></i>
+                    <h5>Not a Forum Supergroup</h5>
+                    <p class="text-muted max-w-400 mx-auto fs-7">${err.message}</p>
+                `).show();
+                showToast("Failed to retrieve topics: " + err.message, "error");
+            });
+        }
+
+        function quickChatToTopic(chatID, topicID, topicTitle) {
+            // Direct navigate to Chats View
+            $("#navLinkChats").click();
+            
+            // Loop & trigger click if matching chat exists
+            setTimeout(() => {
+                const item = $(`.chat-list-item[data-id="${chatID}"]`);
+                if (item.length) {
+                    item.click();
+                    
+                    // Wait for topics dropdown to load, then select the topic
+                    setTimeout(() => {
+                        $("#selectForumTopics").val(topicID).trigger('change');
+                        showToast(`Switched chat and filtered to topic: "${topicTitle}"`, "success");
+                    }, 800);
+                } else {
+                    showToast("Could not locate dialogue thread to chat.", "error");
+                }
+            }, 300);
+        }
+
+        // ==================== SUBVIEW 6: REPORT PAGE ====================
+        function generateAccountReport() {
+            const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+            if (!token) return;
+
+            $("#reportPageLoader").show();
+            $("#reportPageDashboard").hide();
+
+            // Run Promise.all to fetch lists in parallel for rapid response times
+            Promise.all([
+                fetch("/list-contacts", {
+                    method: "GET",
+                    headers: { "Authorization": "Bearer " + token }
+                }).then(res => { if (!res.ok) throw new Error(); return res.json(); }),
+                
+                fetch("/list-chats", {
+                    method: "GET",
+                    headers: { "Authorization": "Bearer " + token }
+                }).then(res => { if (!res.ok) throw new Error(); return res.json(); }),
+
+                fetch("/chats/list-own", {
+                    method: "GET",
+                    headers: { "Authorization": "Bearer " + token }
+                }).then(res => { if (!res.ok) throw new Error(); return res.json(); })
+            ])
+            .then(([contactsData, chatsData, ownChatsData]) => {
+                $("#reportPageLoader").hide();
+
+                // 1. Contacts Stats
+                const contacts = contactsData.contacts || [];
+                const totalContactsAll = contacts.length;
+                const mutualContacts = contacts.filter(c => c.mutual_contact === true).length;
+                const bots = contacts.filter(c => c.is_bot === true).length;
+                const friends = contacts.filter(c => c.mutual_contact === false && c.is_bot === false).length;
+
+                $("#statTotalContactsAll").text(totalContactsAll);
+                $("#statTotalContactsFriends").text(friends);
+                $("#statTotalContactsMutual").text(mutualContacts);
+                $("#statTotalContactsNone").text(bots);
+                $("#statTotalContactsAllBadge").text(totalContactsAll);
+
+                // 2. Chats / Dialogues Stats
+                const chats = chatsData || [];
+                $("#statTotalChat").text(chats.length);
+
+                const groupsCount = chats.filter(c => c.is_group === true).length;
+                const channelsCount = chats.filter(c => c.is_channel === true).length;
+                const dialogueBotsCount = chats.filter(c => c.is_bot === true).length;
+
+                $("#statTotalGroup").text(groupsCount);
+                $("#statTotalChannel").text(channelsCount);
+                $("#statTotalBot").text(dialogueBotsCount);
+
+                // 3. Ownership Stats
+                const ownChats = ownChatsData || [];
+                const ownGroupsCount = ownChats.filter(c => c.type === "supergroup" || c.type === "group").length;
+                const ownChannelsCount = ownChats.filter(c => c.type === "channel").length;
+                
+                // Count own bots: either dialogue bots or any bot in contacts list
+                const ownBotsCount = dialogueBotsCount || bots || 0;
+
+                $("#statTotalOwnGroup").text(ownGroupsCount);
+                $("#statTotalOwnChannel").text(ownChannelsCount);
+                $("#statTotalOwnBot").text(ownBotsCount);
+
+                $("#reportPageDashboard").show();
+            })
+            .catch(err => {
+                $("#reportPageLoader").hide();
+                showToast("Failed to aggregate reports telemetry. Please ensure your Telegram session is active.", "error");
+            });
         }
 
         // ==================== DATA EXPORT UTILITIES ====================
