@@ -375,6 +375,7 @@ async def get_own_groups(phone: str):
             dialogs = await client.get_dialogs()
             own_chats = []
             for d in dialogs:
+                if (d.is_group or d.is_channel) and getattr(d.entity, 'creator', False):
                     is_megagroup = getattr(d.entity, 'megagroup', False)
                     is_broadcast = d.is_channel and not is_megagroup
                     own_chats.append({
