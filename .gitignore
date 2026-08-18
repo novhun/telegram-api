@@ -1,38 +1,98 @@
-# Python bytecode
+# ==========================================
+# Python Bytecode & Build Artifacts
+# ==========================================
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Virtual environments
+# ==========================================
+# Virtual Environments
+# ==========================================
 venv/
 .venv/
 env/
 ENV/
+env.bak/
+venv.bak/
 bin/
 include/
 lib/
 share/
 pyvenv.cfg
-downloads/
-# Telegram session databases (extremely sensitive!)
+
+# ==========================================
+# Telegram Session Databases (CRITICAL SECURITY)
+# ==========================================
 sessions/
 *.session
 *.session-journal
+*.session.sqlite3
+*.session-wal
+*.session-shm
 
-# Local configurations & secrets
+# ==========================================
+# Secrets, Environment Files & Credentials
+# ==========================================
 .env
 .env.local
 .env.*.local
 .env.development.local
 .env.test.local
 .env.production.local
+*.pem
+*.key
+*.cert
 
-# Logs
+# Do not ignore example environment template
+!example.env
+!.env.example
+
+# ==========================================
+# Runtime Data & Public Share Links
+# ==========================================
+shares.json
+*.db
+*.sqlite
+*.sqlite3
+
+# ==========================================
+# Report Exports & Downloads
+# ==========================================
+downloads/
+*.xlsx
+*.xls
+*.pdf
+*.csv
+
+# ==========================================
+# Logs & Process Outputs
+# ==========================================
 *.log
 nohup.out
 telegram-api.log
+*.pid
 
-# OS-specific files
+# ==========================================
+# OS-Specific Files
+# ==========================================
 .DS_Store
 .DS_Store?
 ._*
@@ -40,11 +100,28 @@ telegram-api.log
 .Trashes
 ehthumbs.db
 Thumbs.db
+[Dd]esktop.ini
 
-# IDE configurations
+# ==========================================
+# IDE & Editor Configurations
+# ==========================================
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 .project
 .pydevproject
 .settings/
 .gemini/
+
+# ==========================================
+# Testing, Linting & Type Checking
+# ==========================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/

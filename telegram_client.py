@@ -14,7 +14,7 @@ from telethon.tl.types import PeerUser, PeerChat, PeerChannel
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.contacts import GetContactsRequest
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, date, timezone
 import logging
 from auth import create_token
 
@@ -37,17 +37,19 @@ def get_lock(phone: str):
         _client_locks[phone] = asyncio.Lock()
     return _client_locks[phone]
 
-_clients = {}  # Optional cache for clients
+_clients = {}  # Cache for clients
 
 def get_client(phone: str) -> TelegramClient:
-    """Get a Telegram client instance"""
-    return TelegramClient(
-        f"{SESSIONS_DIR}/{phone}",
-        API_ID,
-        API_HASH,
-        connection_retries=3,
-        sequential_updates=True
-    )
+    """Get or create a cached Telegram client instance to prevent SQLite locks"""
+    if phone not in _clients or _clients[phone] is None:
+        _clients[phone] = TelegramClient(
+            f"{SESSIONS_DIR}/{phone}",
+            API_ID,
+            API_HASH,
+            connection_retries=3,
+            sequential_updates=True
+        )
+    return _clients[phone]
 
 # ------------------- Telegram Operations -------------------
 
@@ -265,28 +267,89 @@ async def list_all_messages(phone, chat_id, limit=35):
         await client.disconnect()
         return messages
 
-async def fetch_messages_by_date(phone: str, chat_id: int, date_from, date_to):
+def parse_dt(d, is_end_of_day: bool = False) -> Optional[datetime]:
+    """Parse flexible date input (datetime, date, str) into UTC timezone-aware datetime."""
+    if not d:
+        return None
+    if isinstance(d, datetime):
+        if d.tzinfo is None:
+            return d.replace(tzinfo=timezone.utc)
+        return d
+    if isinstance(d, date):
+        if is_end_of_day:
+            return datetime(d.year, d.month, d.day, 23, 59, 59, tzinfo=timezone.utc)
+        return datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=timezone.utc)
+    if isinstance(d, str):
+        d_str = d.strip()
+        if not d_str:
+            return None
+        if len(d_str) == 10 and d_str[4] == '-' and d_str[7] == '-':
+            try:
+                parsed_d = datetime.strptime(d_str, "%Y-%m-%d")
+                if is_end_of_day:
+                    return datetime(parsed_d.year, parsed_d.month, parsed_d.day, 23, 59, 59, tzinfo=timezone.utc)
+                return datetime(parsed_d.year, parsed_d.month, parsed_d.day, 0, 0, 0, tzinfo=timezone.utc)
+            except ValueError:
+                pass
+        try:
+            parsed = datetime.fromisoformat(d_str.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                return parsed.replace(tzinfo=timezone.utc)
+            return parsed
+        except Exception:
+            return None
+    return None
+
+async def fetch_messages_by_date(phone: str, chat_id: int, date_from=None, date_to=None, topic_id=None):
     """
     Fetch messages from a chat within a specific date range using a per-phone lock
     to avoid SQLite database lock issues in Telethon sessions.
+    Supports optional topic_id to filter by specific forum topic.
     """
     lock = get_lock(phone)  # make sure get_lock(phone) returns an asyncio.Lock()
     
+    dt_from = parse_dt(date_from, is_end_of_day=False)
+    dt_to = parse_dt(date_to, is_end_of_day=True)
+
     async with lock:
         client = get_client(phone)
         await client.start()
         messages = []
+        max_fetch = 500 if not dt_from else 2000
+        reply_to_arg = int(topic_id) if topic_id is not None and str(topic_id).strip() != "" else None
         try:
-            async for msg in client.iter_messages(chat_id, min_date=date_from, max_date=date_to):
+            async for msg in client.iter_messages(int(chat_id), offset_date=dt_to, limit=max_fetch, reply_to=reply_to_arg):
+                if msg.date:
+                    msg_date = msg.date
+                    if msg_date.tzinfo is None:
+                        msg_date = msg_date.replace(tzinfo=timezone.utc)
+                    if dt_to and msg_date > dt_to:
+                        continue
+                    if dt_from and msg_date < dt_from:
+                        break
+
+                sender_name = ""
+                if msg.sender:
+                    first_name = getattr(msg.sender, "first_name", "") or ""
+                    last_name = getattr(msg.sender, "last_name", "") or ""
+                    title = getattr(msg.sender, "title", "") or ""
+                    sender_name = f"{first_name} {last_name}".strip() or title
+
+                msg_topic_id = None
+                reply_to_id = None
+                if msg.reply_to:
+                    reply_to_id = getattr(msg.reply_to, 'reply_to_msg_id', None)
+                    msg_topic_id = getattr(msg.reply_to, 'reply_to_top_id', None) or reply_to_id
+
                 messages.append({
                     "id": msg.id,
                     "date": str(msg.date),
                     "text": msg.text,
                     "sender_id": getattr(msg.sender, "id", None),
-                    "sender_name": getattr(getattr(msg.sender, "first_name", ""), 'first_name', '') + " " +
-                                   getattr(getattr(msg.sender, "last_name", ""), 'last_name', ''),
+                    "sender_name": sender_name,
                     "media": bool(msg.media),
-                    "reply_to": msg.reply_to.reply_to_msg_id if msg.reply_to else None
+                    "reply_to": reply_to_id,
+                    "topic_id": msg_topic_id
                 })
         finally:
             await client.disconnect()
@@ -311,9 +374,9 @@ async def is_session_active(phone: str) -> bool:
         finally:
             await client.disconnect()
 
-async def fetch_messages(phone: str, chat_id: int, date_from, date_to):
+async def fetch_messages(phone: str, chat_id: int, date_from=None, date_to=None, topic_id=None):
     """Alias for fetch_messages_by_date to support main.py calls"""
-    return await fetch_messages_by_date(phone, chat_id, date_from, date_to)
+    return await fetch_messages_by_date(phone, chat_id, date_from, date_to, topic_id)
 
 async def invite_to_group(phone: str, chat_id: int, user_id: str):
     """

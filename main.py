@@ -47,6 +47,15 @@ templates = Jinja2Templates(directory="web")
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "name": "Home"})
+
+@app.get("/report", response_class=HTMLResponse)
+@app.get("/report-chat", response_class=HTMLResponse)
+async def read_report_chat(request: Request):
+    return templates.TemplateResponse("report-chat.html", {"request": request, "name": "Reports"})
+
+@app.get("/share/{share_id}", response_class=HTMLResponse)
+async def read_shared_report(request: Request, share_id: str):
+    return templates.TemplateResponse("report-chat.html", {"request": request, "name": "Shared Report", "share_id": share_id})
 # --- Path Setup ---
 BASE_DIR = Path(__file__).parent
 BUILD_PATH = BASE_DIR / "telegram-dashboard" / "build"
@@ -358,7 +367,8 @@ async def get_messages_by_date(
             phone=user["phone"],
             chat_id=req.chat_id,
             date_from=req.date_from,
-            date_to=req.date_to
+            date_to=req.date_to,
+            topic_id=req.topic_id
         )
         return {"messages": messages}
     except Exception as e:
@@ -441,3 +451,182 @@ async def get_pwa_sw():
 async def get_pwa_icon():
     """Expose icon.svg at the application root for PWA high-resolution vector scaling."""
     return FileResponse("web/icon.svg", media_type="image/svg+xml")
+
+# ==================== PUBLIC SHARE LINKS ====================
+import secrets
+import hashlib
+import json
+from datetime import datetime, timedelta, timezone
+
+SHARES_FILE = Path("shares.json")
+
+def load_shares() -> dict:
+    if SHARES_FILE.exists():
+        try:
+            with open(SHARES_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading shares: {e}")
+            return {}
+    return {}
+
+def save_shares(shares: dict):
+    try:
+        with open(SHARES_FILE, "w", encoding="utf-8") as f:
+            json.dump(shares, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Error saving shares: {e}")
+
+def hash_pw(pw: str) -> str:
+    return hashlib.sha256(pw.encode("utf-8")).hexdigest()
+
+@app.post("/shares/create", tags=["Public Share"])
+async def create_share_link(
+    req: CreateShareRequest,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Create a public share link with optional password and expiration.
+    """
+    try:
+        shares = load_shares()
+        share_id = secrets.token_urlsafe(8).replace("-", "").replace("_", "")[:8]
+        while share_id in shares:
+            share_id = secrets.token_urlsafe(8).replace("-", "").replace("_", "")[:8]
+
+        now = datetime.now(timezone.utc)
+        expires_at = None
+        if req.expires_in_hours and req.expires_in_hours > 0:
+            expires_at = (now + timedelta(hours=req.expires_in_hours)).isoformat()
+
+        pw_hash = hash_pw(req.password) if req.password else None
+
+        shares[share_id] = {
+            "share_id": share_id,
+            "chat_id": req.chat_id,
+            "topic_id": req.topic_id,
+            "title": req.title or f"Chat {req.chat_id}",
+            "phone": user["phone"],
+            "password_hash": pw_hash,
+            "created_at": now.isoformat(),
+            "expires_at": expires_at
+        }
+        save_shares(shares)
+
+        return {
+            "share_id": share_id,
+            "share_url": f"/share/{share_id}",
+            "has_password": bool(req.password),
+            "title": shares[share_id]["title"],
+            "expires_at": expires_at
+        }
+    except Exception as e:
+        logger.error(f"Create share link error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/shares/{share_id}/info", tags=["Public Share"])
+async def get_share_info(share_id: str):
+    """
+    Public endpoint to get metadata about a share link.
+    """
+    shares = load_shares()
+    if share_id not in shares:
+        raise HTTPException(status_code=404, detail="Share link not found or expired")
+
+    share = shares[share_id]
+    if share.get("expires_at"):
+        exp_dt = datetime.fromisoformat(share["expires_at"])
+        if datetime.now(timezone.utc) > exp_dt:
+            raise HTTPException(status_code=410, detail="This share link has expired")
+
+    return {
+        "share_id": share_id,
+        "title": share.get("title", f"Chat {share['chat_id']}"),
+        "chat_id": share["chat_id"],
+        "topic_id": share.get("topic_id"),
+        "requires_password": bool(share.get("password_hash")),
+        "created_at": share["created_at"],
+        "expires_at": share.get("expires_at")
+    }
+
+@app.post("/shares/{share_id}/verify", tags=["Public Share"])
+async def verify_share_password(share_id: str, req: VerifyShareRequest):
+    """
+    Public endpoint to verify share password.
+    """
+    shares = load_shares()
+    if share_id not in shares:
+        raise HTTPException(status_code=404, detail="Share link not found")
+
+    share = shares[share_id]
+    if share.get("expires_at"):
+        exp_dt = datetime.fromisoformat(share["expires_at"])
+        if datetime.now(timezone.utc) > exp_dt:
+            raise HTTPException(status_code=410, detail="This share link has expired")
+
+    expected_hash = share.get("password_hash")
+    if expected_hash:
+        if not req.password or hash_pw(req.password) != expected_hash:
+            raise HTTPException(status_code=401, detail="Invalid password")
+
+    return {
+        "valid": True,
+        "title": share.get("title"),
+        "chat_id": share["chat_id"],
+        "topic_id": share.get("topic_id")
+    }
+
+@app.post("/shares/{share_id}/messages", tags=["Public Share"])
+async def get_shared_messages(share_id: str, req: ShareMessageRequest):
+    """
+    Public endpoint to fetch messages for the shared chat without Telegram login.
+    """
+    shares = load_shares()
+    if share_id not in shares:
+        raise HTTPException(status_code=404, detail="Share link not found")
+
+    share = shares[share_id]
+    if share.get("expires_at"):
+        exp_dt = datetime.fromisoformat(share["expires_at"])
+        if datetime.now(timezone.utc) > exp_dt:
+            raise HTTPException(status_code=410, detail="This share link has expired")
+
+    expected_hash = share.get("password_hash")
+    if expected_hash:
+        if not req.password or hash_pw(req.password) != expected_hash:
+            raise HTTPException(status_code=401, detail="Invalid password")
+
+    try:
+        topic_to_fetch = req.topic_id if req.topic_id is not None else share.get("topic_id")
+        messages = await fetch_messages(
+            phone=share["phone"],
+            chat_id=share["chat_id"],
+            date_from=req.date_from,
+            date_to=req.date_to,
+            topic_id=topic_to_fetch
+        )
+        return {"messages": messages}
+    except Exception as e:
+        logger.error(f"Get shared messages error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/shares/{share_id}/topics", tags=["Public Share"])
+async def get_shared_topics(share_id: str, password: Optional[str] = None):
+    """
+    Public endpoint to fetch forum topics for the shared chat.
+    """
+    shares = load_shares()
+    if share_id not in shares:
+        raise HTTPException(status_code=404, detail="Share link not found")
+
+    share = shares[share_id]
+    expected_hash = share.get("password_hash")
+    if expected_hash:
+        if not password or hash_pw(password) != expected_hash:
+            raise HTTPException(status_code=401, detail="Invalid password")
+
+    try:
+        return await get_forum_topics(share["phone"], share["chat_id"])
+    except Exception as e:
+        logger.error(f"Get shared topics error: {str(e)}")
+        return []

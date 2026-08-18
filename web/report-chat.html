@@ -1,0 +1,3024 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Staff Reports & Analytics · Telegram API</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Kantumruy+Pro:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --primary-border: #bfdbfe;
+            --secondary: #0f172a;
+            --success: #16a34a;
+            --success-bg: #f0fdf4;
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --info: #0284c7;
+            --info-bg: #f0f9ff;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --radius-pill: 9999px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1480px;
+            margin: 0 auto;
+        }
+
+        /* Top Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .header-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--secondary);
+            letter-spacing: -0.02em;
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .account-badge {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 0.45rem 0.9rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .account-badge.logged-in {
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .account-badge.logged-out {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .account-badge.shared-mode {
+            border-color: #e9d5ff;
+            background: #faf5ff;
+            color: #7e22ce;
+        }
+
+        .btn-action {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.9rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.15s ease;
+            box-shadow: var(--shadow-sm);
+            text-decoration: none;
+        }
+
+        .btn-action:hover {
+            background: var(--bg);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary-action {
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary);
+        }
+
+        .btn-primary-action:hover {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        .btn-share {
+            background: #f5f3ff;
+            color: #6d28d9;
+            border-color: #ddd6fe;
+        }
+
+        .btn-share:hover {
+            background: #ede9fe;
+            border-color: #c4b5fd;
+        }
+
+        .btn-excel {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .btn-excel:hover {
+            background: #dcfce7;
+            border-color: #86efac;
+        }
+
+        .btn-pdf {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .btn-pdf:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        .btn-action i.spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Controls & Filter Panel */
+        .controls-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .control-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        /* Select styling */
+        .custom-select-wrap {
+            position: relative;
+            min-width: 220px;
+        }
+
+        .custom-select {
+            width: 100%;
+            padding: 0.5rem 2rem 0.5rem 0.85rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            font-weight: 600;
+            appearance: none;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .custom-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .custom-select-wrap::after {
+            content: "\f078";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 0.7rem;
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* Topic Pills Bar */
+        .topics-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            padding-top: 0.75rem;
+            border-top: 1px dashed var(--border);
+        }
+
+        .topic-pill {
+            padding: 0.35rem 0.85rem;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-main);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.15s ease;
+        }
+
+        .topic-pill:hover {
+            background: white;
+            border-color: #cbd5e1;
+        }
+
+        .topic-pill.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        }
+
+        .topic-pill .count-badge {
+            background: rgba(0, 0, 0, 0.06);
+            padding: 0.1rem 0.45rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .topic-pill.active .count-badge {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+
+        /* Quick Filters & Date Range */
+        .filter-btn-group {
+            display: inline-flex;
+            background: var(--bg);
+            padding: 0.25rem;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+        }
+
+        .filter-btn {
+            padding: 0.35rem 0.9rem;
+            border-radius: var(--radius-pill);
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .filter-btn:hover {
+            color: var(--text-main);
+        }
+
+        .filter-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .date-inputs {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .date-inputs input[type="date"] {
+            padding: 0.35rem 0.65rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-main);
+            background: white;
+            outline: none;
+        }
+
+        .date-inputs input[type="date"]:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-apply {
+            padding: 0.38rem 0.85rem;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .btn-apply:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Search input */
+        .search-wrap {
+            position: relative;
+            min-width: 220px;
+            flex: 1;
+            max-width: 320px;
+        }
+
+        .search-wrap i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.45rem 0.75rem 0.45rem 2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+            outline: none;
+            transition: all 0.15s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 1.2rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.blue {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .stat-icon.green {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .stat-icon.amber {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .stat-icon.purple {
+            background: #faf5ff;
+            color: #9333ea;
+        }
+
+        .stat-icon.indigo {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .stat-info .stat-num {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--secondary);
+            line-height: 1.2;
+        }
+
+        .stat-info .stat-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        /* Person / Staff Grid */
+        .person-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .person-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .person-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .person-header {
+            padding: 1.1rem 1.25rem;
+            border-bottom: 1px solid var(--border-light);
+            background: #fafcff;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-pill);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: white;
+            flex-shrink: 0;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+        }
+
+        .person-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .person-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .person-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.15rem;
+        }
+
+        .badge-success-rate {
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-success-rate.high {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        .badge-success-rate.medium {
+            background: var(--warning-bg);
+            color: var(--warning);
+            border: 1px solid #fde68a;
+        }
+
+        .badge-success-rate.low {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid #fecaca;
+        }
+
+        /* Progress Bar */
+        .progress-box {
+            padding: 0.65rem 1.25rem;
+            background: #fafcff;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .progress-track {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: var(--radius-pill);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 0.4s ease;
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 0.3rem;
+        }
+
+        /* Report List inside Person Card */
+        .report-list {
+            padding: 0.75rem 1.25rem;
+            flex: 1;
+            max-height: 380px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .report-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .report-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .report-item {
+            background: var(--bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 0.9rem;
+            font-size: 0.85rem;
+        }
+
+        .report-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.4rem;
+        }
+
+        .report-time {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .report-badges {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .badge-type {
+            padding: 0.15rem 0.5rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-type.in {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-type.out {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-type.other {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .badge-topic {
+            background: #ede9fe;
+            color: #6d28d9;
+            padding: 0.15rem 0.55rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.68rem;
+            font-weight: 600;
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .report-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.5;
+            color: #334155;
+            font-size: 0.83rem;
+        }
+
+        /* Empty & Loading states */
+        .state-container {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
+        .state-container i {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.6;
+        }
+
+        .state-container h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+        }
+
+        /* Error alert */
+        .alert-error {
+            background: var(--danger-bg);
+            border: 1px solid #fecaca;
+            color: var(--danger);
+            padding: 0.85rem 1.25rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Modal Backdrop & Dialog */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1rem;
+        }
+
+        .modal-dialog {
+            background: white;
+            border-radius: var(--radius-lg);
+            max-width: 460px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalPop {
+            0% {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            background: #fafcff;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .btn-close-modal:hover {
+            color: var(--text-main);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 0.4rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.15s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background 0.15s ease;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-submit:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .modal-alert {
+            font-size: 0.82rem;
+            padding: 0.65rem 0.85rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .modal-alert.error {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid #fecaca;
+            display: block;
+        }
+
+        .modal-alert.success {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+
+        /* Share link box */
+        .share-link-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+            margin-top: 0.75rem;
+        }
+
+        .share-link-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .btn-copy {
+            padding: 0.45rem 0.85rem;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-copy:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--secondary);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: toastIn 0.25s ease;
+            max-width: 380px;
+        }
+
+        @keyframes toastIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Printable / Hidden PDF Export Container */
+        #pdfExportContainer {
+            display: none;
+            background: white;
+            color: #0f172a;
+            padding: 24px;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        #pdfExportContainer table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+            margin-bottom: 16px;
+        }
+
+        #pdfExportContainer th,
+        #pdfExportContainer td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        #pdfExportContainer th {
+            background: #f1f5f9;
+            font-weight: 700;
+        }
+
+        /* Print media style */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                color: black;
+            }
+
+            .header-actions,
+            .controls-card,
+            .footer,
+            .btn-action,
+            .modal-backdrop {
+                display: none !important;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .person-card {
+                break-inside: avoid;
+                border: 1px solid #ccc;
+                margin-bottom: 1rem;
+            }
+
+            .report-list {
+                max-height: none;
+                overflow: visible;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .custom-select-wrap,
+            .search-wrap {
+                min-width: 100%;
+                max-width: 100%;
+            }
+
+            .person-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Top Header -->
+        <header class="header">
+            <div class="header-title-wrap">
+                <div class="header-icon"><i class="fas fa-chart-line"></i></div>
+                <div>
+                    <h1 id="pageTitleText">Staff Reports & Task Analytics</h1>
+                    <div class="header-meta">
+                        <span id="activeChatName"><i class="fas fa-comments"></i> Loading Chat...</span>
+                        <span>•</span>
+                        <span id="dateRangeDisplay"><i class="far fa-calendar-alt"></i> This Week</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <!-- Account Status Badge -->
+                <div id="accountBadge" class="account-badge logged-out">
+                    <i class="fas fa-circle" style="font-size: 0.55rem;"></i>
+                    <span id="accountStatusText">Checking login...</span>
+                </div>
+
+                <!-- Share Public Link Button (Admin only) -->
+                <button class="btn-action btn-share" id="btnOpenShareModal"
+                    title="Create a password-protected shareable public link">
+                    <i class="fas fa-share-alt"></i> Share Link
+                </button>
+
+                <!-- Login / Switch Account Button -->
+                <button class="btn-action btn-primary-action" id="btnLoginModal">
+                    <i class="fas fa-sign-in-alt"></i> <span id="btnLoginLabel">Login</span>
+                </button>
+
+                <!-- Export XLSX Button -->
+                <button class="btn-action btn-excel" id="btnExportExcel" title="Export reports to Excel (.xlsx)">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </button>
+
+                <!-- Export PDF Button -->
+                <button class="btn-action btn-pdf" id="btnExportPdf" title="Export reports to PDF document">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+
+                <!-- Refresh Button -->
+                <button class="btn-action" id="btnRefresh" title="Refresh reports">
+                    <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh
+                </button>
+
+                <!-- Home link (hidden in public share mode) -->
+                <a href="/" class="btn-action" id="btnHomeDash" title="Open API Documentation / Console">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </div>
+        </header>
+
+        <!-- Error container -->
+        <div id="errorContainer"></div>
+
+        <!-- Main Controls Card -->
+        <section class="controls-card">
+            <!-- Row 1: Chat Selector, Staff Selector, and Search -->
+            <div class="controls-row">
+                <!-- Chat Selector (hidden or locked in public share view) -->
+                <div class="control-group" id="chatSelectGroup">
+                    <span class="control-label"><i class="fas fa-layer-group"></i> Select Chat:</span>
+                    <div class="custom-select-wrap">
+                        <select id="chatSelect" class="custom-select">
+                            <option value="-1002358095203" selected>Loading chats...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Staff Member Filter -->
+                <div class="control-group">
+                    <span class="control-label"><i class="fas fa-user-check"></i> Staff:</span>
+                    <div class="custom-select-wrap" style="min-width: 180px;">
+                        <select id="staffSelect" class="custom-select">
+                            <option value="ALL">All Staff Members</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Report Type Filter -->
+                <div class="control-group">
+                    <span class="control-label"><i class="fas fa-filter"></i> Type:</span>
+                    <div class="custom-select-wrap" style="min-width: 140px;">
+                        <select id="typeSelect" class="custom-select">
+                            <option value="ALL">All Types</option>
+                            <option value="in">📥 Report In</option>
+                            <option value="out">📤 Report Out</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Search box -->
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search staff name or task...">
+                </div>
+            </div>
+
+            <!-- Row 2: Date Filters -->
+            <div class="controls-row" style="padding-top: 0.5rem; border-top: 1px solid var(--border-light);">
+                <div class="control-group">
+                    <span class="control-label"><i class="far fa-calendar-check"></i> Period:</span>
+                    <div class="filter-btn-group">
+                        <button class="filter-btn" data-range="today">Today</button>
+                        <button class="filter-btn active" data-range="week">This Week</button>
+                        <button class="filter-btn" data-range="month">This Month</button>
+                        <button class="filter-btn" data-range="all">All Time</button>
+                    </div>
+                </div>
+
+                <div class="date-inputs">
+                    <input type="date" id="dateFrom">
+                    <span style="color: var(--text-muted); font-size: 0.8rem;">to</span>
+                    <input type="date" id="dateTo">
+                    <button id="btnApplyDate" class="btn-apply"><i class="fas fa-arrow-right"></i> Apply</button>
+                </div>
+            </div>
+
+            <!-- Row 3: Forum Topics Bar (if forum topics exist) -->
+            <div id="topicsContainer" class="topics-bar" style="display: none;">
+                <span class="control-label" style="margin-right: 0.4rem;"><i class="fas fa-tags"></i> Topic:</span>
+                <div id="topicPillsWrap" style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
+                    <!-- Generated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Summary Row -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-user-friends"></i></div>
+                <div class="stat-info">
+                    <div class="stat-num" id="statStaffCount">0</div>
+                    <div class="stat-label">Active Staff</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-file-invoice"></i></div>
+                <div class="stat-info">
+                    <div class="stat-num" id="statReportCount">0</div>
+                    <div class="stat-label">Total Reports</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon amber"><i class="fas fa-check-double"></i></div>
+                <div class="stat-info">
+                    <div class="stat-num" id="statAvgSuccess">0%</div>
+                    <div class="stat-label">Avg Completion</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fas fa-tasks"></i></div>
+                <div class="stat-info">
+                    <div class="stat-num" id="statTotalTasks">0</div>
+                    <div class="stat-label">Tasks Tracked</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon indigo"><i class="fas fa-comments"></i></div>
+                <div class="stat-info">
+                    <div class="stat-num" id="statTopicCount">0</div>
+                    <div class="stat-label">Topics</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Staff Cards Grid -->
+        <main id="personGrid" class="person-grid">
+            <div class="state-container">
+                <i class="fas fa-spinner fa-spin" style="color: var(--primary);"></i>
+                <h3>Loading Staff Reports...</h3>
+                <p>Fetching messages and topic metadata</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <span><i class="fas fa-bolt" style="color: var(--warning);"></i> Real-time Telethon Telegram Sync</span>
+            <span>•</span>
+            <span>Supports Khmer Unicode & Multi-Topic Forum Groups</span>
+            <span>•</span>
+            <a href="/docs" target="_blank"><i class="fas fa-book"></i> API Documentation</a>
+        </footer>
+
+    </div>
+
+    <!-- ================= PDF RENDER TEMPLATE (HIDDEN) ================= -->
+    <div id="pdfExportContainer"></div>
+
+    <!-- ================= LOGIN / AUTH MODAL ================= -->
+    <div id="loginModalBackdrop" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3><i class="fab fa-telegram" style="color: var(--primary);"></i> Telegram Login</h3>
+                <button class="btn-close-modal" id="btnCloseLoginModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalAlert" class="modal-alert"></div>
+
+                <!-- Login Option Tabs -->
+                <div class="filter-btn-group" style="width: 100%; margin-bottom: 1.25rem; display: flex; padding: 3px;">
+                    <button class="filter-btn active" id="tabLoginPhone" style="flex: 1; text-align: center;">
+                        <i class="fas fa-mobile-alt"></i> Phone + OTP
+                    </button>
+                    <button class="filter-btn" id="tabLoginToken" style="flex: 1; text-align: center;">
+                        <i class="fas fa-key"></i> Bearer Token
+                    </button>
+                </div>
+
+                <!-- Method 1: Phone + OTP Flow -->
+                <div id="authPhoneFlow">
+                    <!-- Step 1: Request Phone Number -->
+                    <div id="authStep1">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                            Enter your Telegram international phone number with country code (e.g.
+                            <code>+855967171785</code>).
+                        </p>
+                        <div class="form-group">
+                            <label for="inputPhoneNumber">Phone Number</label>
+                            <input type="text" id="inputPhoneNumber" class="form-control" placeholder="+855 00 000 000"
+                                value="+855967171785">
+                        </div>
+                        <button id="btnSendCode" class="btn-submit">
+                            <i class="fas fa-paper-plane"></i> Send Login Code
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Verify OTP Code & 2FA -->
+                    <div id="authStep2" style="display: none;">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                            A login code was sent to your Telegram app on <strong id="displayPhoneTarget"></strong>.
+                        </p>
+                        <div class="form-group">
+                            <label for="inputOtpCode">Telegram OTP Code</label>
+                            <input type="text" id="inputOtpCode" class="form-control" placeholder="12345"
+                                autocomplete="one-time-code">
+                        </div>
+                        <div class="form-group">
+                            <label for="input2FaPassword">2FA Password <span
+                                    style="font-weight: 400; text-transform: none; color: var(--text-muted);">(if
+                                    enabled)</span></label>
+                            <input type="password" id="input2FaPassword" class="form-control"
+                                placeholder="Optional 2-Step Password">
+                        </div>
+                        <button id="btnVerifyCode" class="btn-submit">
+                            <i class="fas fa-key"></i> Verify & Sign In
+                        </button>
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <a href="javascript:void(0)" id="btnBackToStep1"
+                                style="font-size: 0.8rem; color: var(--primary); font-weight: 600; text-decoration: none;">
+                                <i class="fas fa-arrow-left"></i> Change Phone Number
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Method 2: Direct Bearer Token Login -->
+                <div id="authTokenFlow" style="display: none;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                        Paste your JWT Bearer token below to authenticate directly without requesting an OTP code.
+                    </p>
+                    <div class="form-group">
+                        <label for="inputBearerToken">JWT Bearer Token</label>
+                        <textarea id="inputBearerToken" class="form-control" rows="4"
+                            style="font-family: monospace; font-size: 0.82rem; resize: vertical;"
+                            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+                    </div>
+                    <button id="btnVerifyToken" class="btn-submit">
+                        <i class="fas fa-sign-in-alt"></i> Authenticate with Token
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CREATE SHARE LINK MODAL (ADMIN) ================= -->
+    <div id="shareModalBackdrop" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3><i class="fas fa-share-nodes" style="color: #8b5cf6;"></i> Create Public Share Link</h3>
+                <button class="btn-close-modal" id="btnCloseShareModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="shareModalAlert" class="modal-alert"></div>
+
+                <div id="shareFormSection">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.2rem;">
+                        Generate a shareable public link with an optional password so external users or clients can view
+                        this live report without a Telegram account.
+                    </p>
+
+                    <div class="form-group">
+                        <label for="inputShareTitle">Report Title</label>
+                        <input type="text" id="inputShareTitle" class="form-control"
+                            placeholder="e.g. Weekly Staff Performance">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inputSharePassword"><i class="fas fa-lock text-warning"></i> Access Password
+                            (Optional)</label>
+                        <input type="password" id="inputSharePassword" class="form-control"
+                            placeholder="Leave empty for public access without password">
+                        <small
+                            style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+                            If set, viewers must enter this password to unlock the report.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="selectShareExpiry"><i class="far fa-clock"></i> Link Expiration</label>
+                        <select id="selectShareExpiry" class="custom-select" style="width:100%;">
+                            <option value="168" selected>7 Days (1 Week)</option>
+                            <option value="24">24 Hours (1 Day)</option>
+                            <option value="720">30 Days (1 Month)</option>
+                            <option value="0">Never (Permanent)</option>
+                        </select>
+                    </div>
+
+                    <button id="btnGenerateShareLink" class="btn-submit" style="background: #7c3aed;">
+                        <i class="fas fa-link"></i> Generate Share Link
+                    </button>
+                </div>
+
+                <!-- Share Result -->
+                <div id="shareResultSection" style="display: none; margin-top: 1rem;">
+                    <div class="modal-alert success" style="display: block;">
+                        <i class="fas fa-check-circle"></i> Public Share Link Created!
+                    </div>
+                    <div class="form-group">
+                        <label>Shareable URL:</label>
+                        <div class="share-link-box">
+                            <input type="text" id="outputShareUrl" class="share-link-input" readonly>
+                            <button id="btnCopyShareUrl" class="btn-copy"><i class="far fa-copy"></i> Copy</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;" id="shareResultMeta">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= UNLOCK PROTECTED SHARE MODAL (PUBLIC VIEWER) ================= -->
+    <div id="unlockModalBackdrop" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3><i class="fas fa-lock" style="color: var(--warning);"></i> Password Protected Report</h3>
+            </div>
+            <div class="modal-body">
+                <div id="unlockAlert" class="modal-alert"></div>
+                <p style="font-size: 0.88rem; color: var(--text-main); margin-bottom: 1.25rem;">
+                    This report is private and password protected. Please enter the access password to view it.
+                </p>
+                <div class="form-group">
+                    <label for="inputUnlockPassword">Access Password</label>
+                    <input type="password" id="inputUnlockPassword" class="form-control"
+                        placeholder="Enter password to unlock">
+                </div>
+                <button id="btnUnlockReport" class="btn-submit">
+                    <i class="fas fa-unlock"></i> Unlock Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // ================= CONFIG & STATE =================
+            const urlParams = new URLSearchParams(window.location.search);
+            const API_BASE = window.location.origin.startsWith('http') ? window.location.origin : 'http://127.0.0.1:8000';
+
+            // Check if opened via /share/{share_id} or ?share={share_id}
+            const pathParts = window.location.pathname.split('/');
+            let publicShareId = urlParams.get('share') || urlParams.get('share_id') || (pathParts[1] === 'share' && pathParts[2] ? pathParts[2] : null);
+            let sharePassword = sessionStorage.getItem(`share_pw_${publicShareId}`) || '';
+
+            const STORAGE_TOKEN_KEY = 'tg_management_bearer_token';
+            const STORAGE_PHONE_KEY = 'tg_management_phone';
+
+            let token = urlParams.get('token') || localStorage.getItem(STORAGE_TOKEN_KEY) || '';
+            let currentChatId = parseInt(urlParams.get('chat_id')) || -1002358095203;
+            let selectedTopicId = null; // null = all topics
+            let selectedStaff = 'ALL';
+            let selectedType = 'ALL';
+            let searchQuery = '';
+            let currentRange = 'week';
+
+            let activeAuthPhoneHash = '';
+            let rawMessages = [];
+            let processedPeople = [];
+            let chatList = [];
+            let topicMap = new Map(); // id -> { id, title }
+
+            // Colors for avatars
+            const avatarGradients = [
+                'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                'linear-gradient(135deg, #059669, #047857)',
+                'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                'linear-gradient(135deg, #db2777, #be185d)',
+                'linear-gradient(135deg, #ea580c, #c2410c)',
+                'linear-gradient(135deg, #0284c7, #0369a1)',
+                'linear-gradient(135deg, #4f46e5, #4338ca)',
+                'linear-gradient(135deg, #0d9488, #0f766e)'
+            ];
+
+            function getAvatarColor(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                return avatarGradients[Math.abs(hash) % avatarGradients.length];
+            }
+
+            // ================= DOM ELEMENTS =================
+            const pageTitleText = document.getElementById('pageTitleText');
+            const chatSelect = document.getElementById('chatSelect');
+            const chatSelectGroup = document.getElementById('chatSelectGroup');
+            const staffSelect = document.getElementById('staffSelect');
+            const typeSelect = document.getElementById('typeSelect');
+            const searchInput = document.getElementById('searchInput');
+            const topicsContainer = document.getElementById('topicsContainer');
+            const topicPillsWrap = document.getElementById('topicPillsWrap');
+            const personGrid = document.getElementById('personGrid');
+            const errorContainer = document.getElementById('errorContainer');
+            const btnRefresh = document.getElementById('btnRefresh');
+            const refreshIcon = document.getElementById('refreshIcon');
+            const btnExportExcel = document.getElementById('btnExportExcel');
+            const btnExportPdf = document.getElementById('btnExportPdf');
+            const btnOpenShareModal = document.getElementById('btnOpenShareModal');
+            const btnHomeDash = document.getElementById('btnHomeDash');
+            const pdfExportContainer = document.getElementById('pdfExportContainer');
+
+            const accountBadge = document.getElementById('accountBadge');
+            const accountStatusText = document.getElementById('accountStatusText');
+            const btnLoginModal = document.getElementById('btnLoginModal');
+            const btnLoginLabel = document.getElementById('btnLoginLabel');
+
+            // Login Modal Elements & Tabs
+            const loginModalBackdrop = document.getElementById('loginModalBackdrop');
+            const btnCloseLoginModal = document.getElementById('btnCloseLoginModal');
+            const tabLoginPhone = document.getElementById('tabLoginPhone');
+            const tabLoginToken = document.getElementById('tabLoginToken');
+            const authPhoneFlow = document.getElementById('authPhoneFlow');
+            const authTokenFlow = document.getElementById('authTokenFlow');
+            const authStep1 = document.getElementById('authStep1');
+            const authStep2 = document.getElementById('authStep2');
+            const inputPhoneNumber = document.getElementById('inputPhoneNumber');
+            const inputOtpCode = document.getElementById('inputOtpCode');
+            const input2FaPassword = document.getElementById('input2FaPassword');
+            const inputBearerToken = document.getElementById('inputBearerToken');
+            const btnSendCode = document.getElementById('btnSendCode');
+            const btnVerifyCode = document.getElementById('btnVerifyCode');
+            const btnVerifyToken = document.getElementById('btnVerifyToken');
+            const btnBackToStep1 = document.getElementById('btnBackToStep1');
+            const modalAlert = document.getElementById('modalAlert');
+            const displayPhoneTarget = document.getElementById('displayPhoneTarget');
+
+            // Share Modal
+            const shareModalBackdrop = document.getElementById('shareModalBackdrop');
+            const btnCloseShareModal = document.getElementById('btnCloseShareModal');
+            const shareModalAlert = document.getElementById('shareModalAlert');
+            const shareFormSection = document.getElementById('shareFormSection');
+            const shareResultSection = document.getElementById('shareResultSection');
+            const inputShareTitle = document.getElementById('inputShareTitle');
+            const inputSharePassword = document.getElementById('inputSharePassword');
+            const selectShareExpiry = document.getElementById('selectShareExpiry');
+            const btnGenerateShareLink = document.getElementById('btnGenerateShareLink');
+            const outputShareUrl = document.getElementById('outputShareUrl');
+            const btnCopyShareUrl = document.getElementById('btnCopyShareUrl');
+            const shareResultMeta = document.getElementById('shareResultMeta');
+
+            // Unlock Modal
+            const unlockModalBackdrop = document.getElementById('unlockModalBackdrop');
+            const unlockAlert = document.getElementById('unlockAlert');
+            const inputUnlockPassword = document.getElementById('inputUnlockPassword');
+            const btnUnlockReport = document.getElementById('btnUnlockReport');
+
+            // Date filters
+            const dateFromInput = document.getElementById('dateFrom');
+            const dateToInput = document.getElementById('dateTo');
+            const btnApplyDate = document.getElementById('btnApplyDate');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+
+            // Stats
+            const statStaffCount = document.getElementById('statStaffCount');
+            const statReportCount = document.getElementById('statReportCount');
+            const statAvgSuccess = document.getElementById('statAvgSuccess');
+            const statTotalTasks = document.getElementById('statTotalTasks');
+            const statTopicCount = document.getElementById('statTopicCount');
+            const activeChatName = document.getElementById('activeChatName');
+            const dateRangeDisplay = document.getElementById('dateRangeDisplay');
+
+            // ================= TOAST NOTIFICATION =================
+            function showToast(msg, icon = 'info') {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                let iconClass = 'fa-info-circle';
+                if (icon === 'success') iconClass = 'fa-check-circle text-success';
+                if (icon === 'error') iconClass = 'fa-exclamation-circle text-danger';
+                toast.innerHTML = `<i class="fas ${iconClass}"></i> <span>${escapeHtml(msg)}</span>`;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px)';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            // ================= DATE HELPERS =================
+            function getTodayStr() {
+                return new Date().toISOString().split('T')[0];
+            }
+
+            function getWeekStartStr() {
+                const d = new Date();
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+                d.setDate(diff);
+                return d.toISOString().split('T')[0];
+            }
+
+            function getMonthStartStr() {
+                const d = new Date();
+                d.setDate(1);
+                return d.toISOString().split('T')[0];
+            }
+
+            function formatDateDisplay(dStr) {
+                if (!dStr) return '';
+                const d = new Date(dStr);
+                return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+
+            // ================= PARSING HELPERS =================
+            function getReportType(text) {
+                if (!text) return 'other';
+                const lower = text.toLowerCase();
+                if (lower.includes('report in') || lower.startsWith('in:')) return 'in';
+                if (lower.includes('report out') || lower.startsWith('out:')) return 'out';
+                return 'other';
+            }
+
+            function parseTasks(text) {
+                if (!text) return { total: 0, completed: 0, inProgress: 0 };
+                const lines = text.split(/\n/);
+                let total = 0, completed = 0, inProgress = 0;
+
+                const doneRegex = /(?:\(completed\)|\(complete\)|\(done\)|✅|✔️|完成|done|complete|completed)/i;
+                const progressRegex = /(?:in progress|inprocess|not start|postpone|ongoing|in process|wait)/i;
+
+                for (let line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed) continue;
+                    if (/^report\s*(?:in|out)/i.test(trimmed)) continue;
+
+                    const isItem = /^[\d\-•*]\s*/.test(trimmed) || /^[a-z]\)/i.test(trimmed) || trimmed.startsWith('-') || trimmed.startsWith('•');
+                    if (isItem || doneRegex.test(trimmed) || progressRegex.test(trimmed)) {
+                        total++;
+                        if (doneRegex.test(trimmed)) {
+                            completed++;
+                        } else if (progressRegex.test(trimmed)) {
+                            inProgress++;
+                        }
+                    } else if (trimmed.length > 8 && !/^date:/i.test(trimmed) && !/^dear/i.test(trimmed) && !/^thank/i.test(trimmed)) {
+                        total++;
+                    }
+                }
+
+                if (total === 0 && text.length > 5) {
+                    const doneMatches = text.match(doneRegex);
+                    if (doneMatches) {
+                        total = doneMatches.length;
+                        completed = doneMatches.length;
+                    } else {
+                        total = 1;
+                        completed = 0;
+                    }
+                }
+
+                return { total, completed, inProgress };
+            }
+
+            // ================= API CALLS =================
+            async function apiRequest(endpoint, method = 'GET', body = null) {
+                const options = {
+                    method,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                };
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                if (response.status === 401) {
+                    updateAccountBadge(false);
+                    openLoginModal("Your Telegram session has expired or is unauthorized. Please log in below.");
+                    throw new Error("Session expired. Please log in again.");
+                }
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    const msg = errData.detail || `HTTP ${response.status}: ${response.statusText}`;
+                    throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+                }
+                return await response.json();
+            }
+
+            // Check Account Status
+            async function checkAuthStatus() {
+                if (publicShareId) {
+                    accountBadge.className = 'account-badge shared-mode';
+                    accountStatusText.innerHTML = `🔒 Shared Public View`;
+                    btnLoginModal.style.display = 'none';
+                    btnOpenShareModal.style.display = 'none';
+                    btnHomeDash.style.display = 'none';
+                    chatSelectGroup.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const status = await apiRequest('/telegram/status');
+                    if (status && status.is_logged_in) {
+                        const phone = localStorage.getItem(STORAGE_PHONE_KEY) || status.user || 'Active Account';
+                        updateAccountBadge(true, phone);
+                    } else {
+                        updateAccountBadge(false);
+                    }
+                } catch (err) {
+                    updateAccountBadge(false);
+                }
+            }
+
+            function updateAccountBadge(isLoggedIn, info = '') {
+                if (isLoggedIn) {
+                    accountBadge.className = 'account-badge logged-in';
+                    accountStatusText.innerHTML = `🟢 ${escapeHtml(info)}`;
+                    btnLoginLabel.textContent = 'Switch Account';
+                } else {
+                    accountBadge.className = 'account-badge logged-out';
+                    accountStatusText.innerHTML = `🔴 Not Logged In`;
+                    btnLoginLabel.textContent = 'Log In';
+                }
+            }
+
+            // 1. Fetch Chat Dialogs (Admin Mode)
+            async function loadChats() {
+                if (publicShareId) return;
+
+                try {
+                    const dialogs = await apiRequest('/list-chats');
+                    chatList = Array.isArray(dialogs) ? dialogs : (dialogs.chats || []);
+
+                    chatSelect.innerHTML = '';
+                    let foundCurrent = false;
+
+                    // Sort groups and channels first
+                    chatList.sort((a, b) => {
+                        if (a.is_group !== b.is_group) return b.is_group ? 1 : -1;
+                        return (a.name || a.title || '').localeCompare(b.name || b.title || '');
+                    });
+
+                    chatList.forEach(chat => {
+                        const opt = document.createElement('option');
+                        opt.value = chat.id;
+                        const icon = chat.is_group ? '👥 ' : (chat.is_channel ? '📢 ' : '👤 ');
+                        opt.textContent = `${icon}${chat.title || chat.name || 'Chat ' + chat.id} (${chat.id})`;
+                        if (chat.id === currentChatId) {
+                            opt.selected = true;
+                            foundCurrent = true;
+                            activeChatName.innerHTML = `<i class="fas fa-comments"></i> ${chat.title || chat.name || chat.id}`;
+                        }
+                        chatSelect.appendChild(opt);
+                    });
+
+                    // If currentChatId not in list, add it manually
+                    if (!foundCurrent) {
+                        const opt = document.createElement('option');
+                        opt.value = currentChatId;
+                        opt.textContent = `🎯 Current Chat (${currentChatId})`;
+                        opt.selected = true;
+                        chatSelect.insertBefore(opt, chatSelect.firstChild);
+                        activeChatName.innerHTML = `<i class="fas fa-comments"></i> Chat (${currentChatId})`;
+                    }
+                } catch (err) {
+                    console.warn('Could not load chat list:', err);
+                    chatSelect.innerHTML = `<option value="${currentChatId}" selected>Chat (${currentChatId})</option>`;
+                }
+            }
+
+            // 2. Fetch Topics
+            async function loadTopics() {
+                topicMap.clear();
+                topicsContainer.style.display = 'none';
+                topicPillsWrap.innerHTML = '';
+
+                try {
+                    let topics = [];
+                    if (publicShareId) {
+                        const res = await fetch(`${API_BASE}/shares/${publicShareId}/topics?password=${encodeURIComponent(sharePassword)}`);
+                        if (res.ok) topics = await res.json();
+                    } else {
+                        topics = await apiRequest(`/chats/topics?chat_id=${currentChatId}`);
+                    }
+
+                    if (Array.isArray(topics) && topics.length > 0) {
+                        topics.forEach(t => {
+                            topicMap.set(t.id, t);
+                        });
+                        statTopicCount.textContent = topics.length;
+                        renderTopicPills(topics);
+                        topicsContainer.style.display = 'flex';
+                    } else {
+                        statTopicCount.textContent = '0';
+                    }
+                } catch (err) {
+                    console.warn('Topics not available:', err);
+                    statTopicCount.textContent = '0';
+                }
+            }
+
+            function renderTopicPills(topics) {
+                topicPillsWrap.innerHTML = '';
+
+                // "All Topics" pill
+                const allPill = document.createElement('button');
+                allPill.className = `topic-pill ${selectedTopicId === null ? 'active' : ''}`;
+                allPill.innerHTML = `<span>All Topics</span> <span class="count-badge">${topics.length}</span>`;
+                allPill.addEventListener('click', () => {
+                    selectedTopicId = null;
+                    updateTopicPillsActiveState();
+                    applyFiltersAndRender();
+                });
+                topicPillsWrap.appendChild(allPill);
+
+                topics.forEach(t => {
+                    const pill = document.createElement('button');
+                    pill.className = `topic-pill ${selectedTopicId === t.id ? 'active' : ''}`;
+                    pill.dataset.topicId = t.id;
+                    pill.innerHTML = `<span>📁 ${escapeHtml(t.title)}</span>`;
+                    pill.addEventListener('click', () => {
+                        selectedTopicId = (selectedTopicId === t.id) ? null : t.id;
+                        updateTopicPillsActiveState();
+                        applyFiltersAndRender();
+                    });
+                    topicPillsWrap.appendChild(pill);
+                });
+            }
+
+            function updateTopicPillsActiveState() {
+                const pills = topicPillsWrap.querySelectorAll('.topic-pill');
+                pills.forEach(p => {
+                    if (selectedTopicId === null) {
+                        p.classList.toggle('active', !p.dataset.topicId);
+                    } else {
+                        p.classList.toggle('active', p.dataset.topicId == selectedTopicId);
+                    }
+                });
+            }
+
+            // 3. Fetch Messages by Date
+            async function loadReports() {
+                personGrid.innerHTML = `
+            <div class="state-container">
+                <i class="fas fa-spinner fa-spin" style="color: var(--primary);"></i>
+                <h3>Loading Reports...</h3>
+                <p>Fetching staff messages...</p>
+            </div>
+        `;
+                errorContainer.innerHTML = '';
+                refreshIcon.classList.add('spin');
+
+                let fromIso = dateFromInput.value ? (dateFromInput.value.includes('T') ? dateFromInput.value : `${dateFromInput.value}T00:00:00`) : null;
+                let toIso = dateToInput.value ? (dateToInput.value.includes('T') ? dateToInput.value : `${dateToInput.value}T23:59:59`) : null;
+
+                try {
+                    let data;
+                    if (publicShareId) {
+                        const res = await fetch(`${API_BASE}/shares/${publicShareId}/messages`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                password: sharePassword,
+                                date_from: fromIso,
+                                date_to: toIso,
+                                topic_id: selectedTopicId
+                            })
+                        });
+
+                        if (res.status === 401) {
+                            openUnlockModal("Password required to access this report.");
+                            return;
+                        }
+                        if (!res.ok) {
+                            const err = await res.json().catch(() => ({}));
+                            throw new Error(err.detail || 'Failed to fetch shared report data');
+                        }
+                        data = await res.json();
+                    } else {
+                        const payload = {
+                            chat_id: currentChatId,
+                            date_from: fromIso,
+                            date_to: toIso,
+                            topic_id: selectedTopicId
+                        };
+                        data = await apiRequest('/chats/list-message/by-date', 'POST', payload);
+                    }
+
+                    rawMessages = data.messages || data || [];
+
+                    // Populate Staff Select dropdown
+                    populateStaffDropdown(rawMessages);
+
+                    // Filter & Render
+                    applyFiltersAndRender();
+                } catch (err) {
+                    console.error('Fetch error:', err);
+                    errorContainer.innerHTML = `
+                <div class="alert-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div><strong>Error loading reports:</strong> ${escapeHtml(err.message)}</div>
+                </div>
+            `;
+                    personGrid.innerHTML = `
+                <div class="state-container">
+                    <i class="fas fa-exclamation-circle" style="color: var(--danger);"></i>
+                    <h3>Unable to load reports</h3>
+                    <p>${escapeHtml(err.message)}</p>
+                </div>
+            `;
+                } finally {
+                    refreshIcon.classList.remove('spin');
+                }
+            }
+
+            function populateStaffDropdown(messages) {
+                const staffSet = new Set();
+                messages.forEach(m => {
+                    if (m.text && m.text.toLowerCase().includes('report')) {
+                        const name = m.sender_name || `User (${m.sender_id || 'Unknown'})`;
+                        staffSet.add(name);
+                    }
+                });
+
+                const staffArr = Array.from(staffSet).sort();
+                staffSelect.innerHTML = `<option value="ALL">All Staff Members (${staffArr.length})</option>`;
+                staffArr.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    if (name === selectedStaff) opt.selected = true;
+                    staffSelect.appendChild(opt);
+                });
+            }
+
+            // ================= FILTER & RENDER ENGINE =================
+            function applyFiltersAndRender() {
+                // Filter messages
+                let filtered = rawMessages.filter(m => {
+                    if (!m.text) return false;
+                    const textLower = m.text.toLowerCase();
+
+                    // Must be a report message
+                    if (!textLower.includes('report')) return false;
+
+                    // Topic Filter
+                    if (selectedTopicId !== null) {
+                        if (m.topic_id != selectedTopicId && m.reply_to != selectedTopicId) {
+                            return false;
+                        }
+                    }
+
+                    // Staff Filter
+                    const name = m.sender_name || `User (${m.sender_id || 'Unknown'})`;
+                    if (selectedStaff !== 'ALL' && name !== selectedStaff) {
+                        return false;
+                    }
+
+                    // Type Filter
+                    const type = getReportType(m.text);
+                    if (selectedType !== 'ALL' && type !== selectedType) {
+                        return false;
+                    }
+
+                    // Search Query
+                    if (searchQuery) {
+                        const q = searchQuery.toLowerCase();
+                        const matchName = name.toLowerCase().includes(q);
+                        const matchText = textLower.includes(q);
+                        if (!matchName && !matchText) return false;
+                    }
+
+                    return true;
+                });
+
+                // Group by person
+                const peopleMap = new Map();
+                filtered.forEach(m => {
+                    const name = m.sender_name || `Staff (${m.sender_id || 'Unknown'})`;
+                    if (!peopleMap.has(name)) {
+                        peopleMap.set(name, {
+                            name,
+                            sender_id: m.sender_id,
+                            reports: [],
+                            inCount: 0,
+                            outCount: 0,
+                            totalTasks: 0,
+                            completedTasks: 0
+                        });
+                    }
+                    const entry = peopleMap.get(name);
+                    const type = getReportType(m.text);
+                    const { total, completed } = parseTasks(m.text);
+
+                    let topicTitle = null;
+                    if (m.topic_id && topicMap.has(m.topic_id)) {
+                        topicTitle = topicMap.get(m.topic_id).title;
+                    } else if (m.reply_to && topicMap.has(m.reply_to)) {
+                        topicTitle = topicMap.get(m.reply_to).title;
+                    }
+
+                    entry.reports.push({
+                        id: m.id,
+                        date: m.date,
+                        text: m.text,
+                        type: type,
+                        topic_id: m.topic_id || m.reply_to,
+                        topicTitle: topicTitle,
+                        taskCount: total,
+                        completedCount: completed
+                    });
+
+                    entry.totalTasks += total;
+                    entry.completedTasks += completed;
+                    if (type === 'in') entry.inCount++;
+                    else if (type === 'out') entry.outCount++;
+                });
+
+                const people = Array.from(peopleMap.values());
+                people.forEach(p => {
+                    p.successRate = p.totalTasks > 0 ? Math.round((p.completedTasks / p.totalTasks) * 100) : (p.reports.length > 0 ? 100 : 0);
+                });
+
+                // Sort by report count descending
+                people.sort((a, b) => b.reports.length - a.reports.length);
+                processedPeople = people;
+
+                // Overall stats
+                const totalReports = filtered.length;
+                let grandTasks = 0, grandCompleted = 0;
+                people.forEach(p => {
+                    grandTasks += p.totalTasks;
+                    grandCompleted += p.completedTasks;
+                });
+                const grandAvgSuccess = grandTasks > 0 ? Math.round((grandCompleted / grandTasks) * 100) : (totalReports > 0 ? 100 : 0);
+
+                statStaffCount.textContent = people.length;
+                statReportCount.textContent = totalReports;
+                statAvgSuccess.textContent = `${grandAvgSuccess}%`;
+                statTotalTasks.textContent = grandTasks;
+
+                // Render Cards
+                renderCards(people);
+            }
+
+            function renderCards(people) {
+                personGrid.innerHTML = '';
+
+                if (people.length === 0) {
+                    personGrid.innerHTML = `
+                <div class="state-container">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No Reports Found</h3>
+                    <p>Try clearing your search query or selecting a different topic/date range.</p>
+                </div>
+            `;
+                    return;
+                }
+
+                people.forEach(person => {
+                    const card = document.createElement('div');
+                    card.className = 'person-card';
+
+                    // Rate Badge Class
+                    let rateClass = 'high';
+                    if (person.successRate < 60) rateClass = 'low';
+                    else if (person.successRate < 85) rateClass = 'medium';
+
+                    // Avatar Initials
+                    const initials = person.name.split(' ')
+                        .filter(w => w.length > 0)
+                        .map(w => w[0])
+                        .join('')
+                        .slice(0, 2)
+                        .toUpperCase() || '👤';
+
+                    // Card Header
+                    const header = document.createElement('div');
+                    header.className = 'person-header';
+                    header.innerHTML = `
+                <div class="avatar" style="background: ${getAvatarColor(person.name)}">${escapeHtml(initials)}</div>
+                <div class="person-info">
+                    <div class="person-name" title="${escapeHtml(person.name)}">
+                        ${escapeHtml(person.name)}
+                    </div>
+                    <div class="person-sub">
+                        <span><i class="fas fa-file-alt"></i> ${person.reports.length} reports</span>
+                        <span>•</span>
+                        <span><i class="fas fa-sign-in-alt"></i> ${person.inCount} in / <i class="fas fa-sign-out-alt"></i> ${person.outCount} out</span>
+                    </div>
+                </div>
+                <div class="badge-success-rate ${rateClass}">
+                    <i class="fas fa-check-circle"></i> ${person.successRate}%
+                </div>
+            `;
+                    card.appendChild(header);
+
+                    // Progress Box
+                    const progressBox = document.createElement('div');
+                    progressBox.className = 'progress-box';
+                    progressBox.innerHTML = `
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: ${person.successRate}%"></div>
+                </div>
+                <div class="progress-meta">
+                    <span>${person.completedTasks} of ${person.totalTasks} tasks completed</span>
+                    <span>${person.successRate}% success rate</span>
+                </div>
+            `;
+                    card.appendChild(progressBox);
+
+                    // Report List
+                    const list = document.createElement('div');
+                    list.className = 'report-list';
+
+                    // Sort reports newest first
+                    const sortedReports = [...person.reports].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                    sortedReports.forEach(r => {
+                        const item = document.createElement('div');
+                        item.className = 'report-item';
+
+                        const d = new Date(r.date);
+                        const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+                        const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+                        const typeBadgeClass = r.type === 'in' ? 'in' : (r.type === 'out' ? 'out' : 'other');
+                        const typeLabel = r.type === 'in' ? '📥 Report In' : (r.type === 'out' ? '📤 Report Out' : '📄 Report');
+
+                        let topicBadgeHtml = '';
+                        if (r.topicTitle) {
+                            topicBadgeHtml = `<span class="badge-topic" title="Topic: ${escapeHtml(r.topicTitle)}"><i class="fas fa-tag"></i> ${escapeHtml(r.topicTitle)}</span>`;
+                        }
+
+                        let taskStatusHtml = '';
+                        if (r.taskCount > 0) {
+                            taskStatusHtml = `<span style="font-size: 0.7rem; font-weight: 700; color: var(--success);"><i class="fas fa-check"></i> ${r.completedCount}/${r.taskCount}</span>`;
+                        }
+
+                        // Clean text prefix
+                        let cleanText = r.text.replace(/^Report\s*(?:In|Out)\s*[:]*\s*/i, '').trim();
+                        if (!cleanText) cleanText = r.text;
+
+                        item.innerHTML = `
+                    <div class="report-meta-row">
+                        <div class="report-time">
+                            <i class="far fa-clock"></i> ${dateStr} ${timeStr}
+                        </div>
+                        <div class="report-badges">
+                            ${topicBadgeHtml}
+                            <span class="badge-type ${typeBadgeClass}">${typeLabel}</span>
+                            ${taskStatusHtml}
+                        </div>
+                    </div>
+                    <div class="report-text">${escapeHtml(cleanText)}</div>
+                `;
+                        list.appendChild(item);
+                    });
+
+                    card.appendChild(list);
+                    personGrid.appendChild(card);
+                });
+            }
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            // ================= EXPORT TO EXCEL (XLSX) =================
+            function exportToExcel() {
+                if (typeof XLSX === 'undefined') {
+                    showToast('Excel export library is loading, please try again...', 'error');
+                    return;
+                }
+
+                if (processedPeople.length === 0) {
+                    showToast('No report data to export.', 'error');
+                    return;
+                }
+
+                showToast('Generating Excel workbook...', 'info');
+
+                const activeChatTitle = activeChatName.textContent.trim() || `Chat ${currentChatId}`;
+
+                // 1. Staff Summary Sheet Data
+                const summaryRows = [
+                    ['TELEGRAM STAFF REPORT SUMMARY'],
+                    ['Chat / Group:', activeChatTitle],
+                    ['Period:', dateRangeDisplay.textContent.trim()],
+                    ['Export Date:', new Date().toLocaleString()],
+                    ['Total Staff:', statStaffCount.textContent],
+                    ['Total Reports:', statReportCount.textContent],
+                    ['Avg Completion Rate:', statAvgSuccess.textContent],
+                    [],
+                    ['No.', 'Staff Member', 'Total Reports', 'Report In (📥)', 'Report Out (📤)', 'Total Tasks', 'Completed Tasks (✅)', 'Success Rate (%)', 'Status']
+                ];
+
+                processedPeople.forEach((p, idx) => {
+                    let status = 'Excellent (≥85%)';
+                    if (p.successRate < 60) status = 'Needs Improvement (<60%)';
+                    else if (p.successRate < 85) status = 'Good (60-84%)';
+
+                    summaryRows.push([
+                        idx + 1,
+                        p.name,
+                        p.reports.length,
+                        p.inCount,
+                        p.outCount,
+                        p.totalTasks,
+                        p.completedTasks,
+                        `${p.successRate}%`,
+                        status
+                    ]);
+                });
+
+                // 2. Detailed Reports Sheet Data
+                const detailRows = [
+                    ['No.', 'Date & Time', 'Staff Name', 'Topic / Thread', 'Type', 'Tasks Done', 'Total Tasks', 'Report Text Content']
+                ];
+
+                let reportIndex = 1;
+                processedPeople.forEach(p => {
+                    p.reports.forEach(r => {
+                        const typeText = r.type === 'in' ? 'Report In' : (r.type === 'out' ? 'Report Out' : 'Report');
+                        detailRows.push([
+                            reportIndex++,
+                            r.date,
+                            p.name,
+                            r.topicTitle || (r.topic_id ? `Topic ${r.topic_id}` : 'General'),
+                            typeText,
+                            r.completedCount,
+                            r.taskCount,
+                            r.text
+                        ]);
+                    });
+                });
+
+                // Build Workbook
+                const wb = XLSX.utils.book_new();
+
+                const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+                wsSummary['!cols'] = [
+                    { wch: 6 }, { wch: 28 }, { wch: 14 }, { wch: 15 }, { wch: 15 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 24 }
+                ];
+                XLSX.utils.book_append_sheet(wb, wsSummary, 'Staff Summary');
+
+                const wsDetails = XLSX.utils.aoa_to_sheet(detailRows);
+                wsDetails['!cols'] = [
+                    { wch: 6 }, { wch: 22 }, { wch: 26 }, { wch: 20 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 60 }
+                ];
+                XLSX.utils.book_append_sheet(wb, wsDetails, 'Detailed Reports');
+
+                const dateSuffix = getTodayStr();
+                const fileName = `Staff_Reports_${currentChatId}_${dateSuffix}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+
+                showToast(`Excel file "${fileName}" exported successfully!`, 'success');
+            }
+
+            // ================= EXPORT TO PDF =================
+            function exportToPDF() {
+                if (typeof html2pdf === 'undefined') {
+                    showToast('PDF export library is loading, please try again...', 'error');
+                    return;
+                }
+
+                if (processedPeople.length === 0) {
+                    showToast('No report data to export.', 'error');
+                    return;
+                }
+
+                showToast('Generating PDF document, please wait...', 'info');
+
+                const activeChatTitle = activeChatName.textContent.trim() || `Chat ${currentChatId}`;
+                const activeTopicTitle = selectedTopicId && topicMap.has(selectedTopicId) ? topicMap.get(selectedTopicId).title : 'All Topics';
+
+                let summaryRowsHtml = '';
+                processedPeople.forEach((p, idx) => {
+                    let color = '#16a34a';
+                    if (p.successRate < 60) color = '#dc2626';
+                    else if (p.successRate < 85) color = '#d97706';
+
+                    summaryRowsHtml += `
+                <tr>
+                    <td style="text-align: center;">${idx + 1}</td>
+                    <td><strong>${escapeHtml(p.name)}</strong></td>
+                    <td style="text-align: center;">${p.reports.length}</td>
+                    <td style="text-align: center;">${p.inCount}</td>
+                    <td style="text-align: center;">${p.outCount}</td>
+                    <td style="text-align: center;">${p.completedTasks} / ${p.totalTasks}</td>
+                    <td style="text-align: center; font-weight: 700; color: ${color};">${p.successRate}%</td>
+                </tr>
+            `;
+                });
+
+                let staffDetailsHtml = '';
+                processedPeople.forEach(p => {
+                    let reportsHtml = '';
+                    p.reports.forEach(r => {
+                        const d = new Date(r.date);
+                        const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                        const typeBadge = r.type === 'in' ? '<span style="background: #dbeafe; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-weight: 700;">IN</span>' : (r.type === 'out' ? '<span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 700;">OUT</span>' : 'REPORT');
+                        const topicTag = r.topicTitle ? `<span style="background: #ede9fe; color: #6d28d9; padding: 2px 6px; border-radius: 4px; font-size: 9px;">📁 ${escapeHtml(r.topicTitle)}</span>` : '';
+
+                        reportsHtml += `
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 10px; color: #64748b;">
+                            <span>${dateStr}</span>
+                            <div>${topicTag} ${typeBadge}</div>
+                        </div>
+                        <div style="white-space: pre-wrap; font-size: 10px; color: #1e293b; line-height: 1.4;">${escapeHtml(r.text)}</div>
+                    </div>
+                `;
+                    });
+
+                    staffDetailsHtml += `
+                <div style="margin-bottom: 16px; break-inside: avoid;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #2563eb;">
+                        <h4 style="margin: 0; font-size: 12px; color: #0f172a;">${escapeHtml(p.name)}</h4>
+                        <span style="font-size: 10px; font-weight: 700; color: #2563eb;">${p.reports.length} Reports • ${p.successRate}% Success</span>
+                    </div>
+                    ${reportsHtml}
+                </div>
+            `;
+                });
+
+                pdfExportContainer.innerHTML = `
+            <div style="font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 14px;">
+                    <div>
+                        <h2 style="margin: 0; color: #0f172a; font-size: 18px;">Telegram Staff Performance Report</h2>
+                        <div style="color: #64748b; font-size: 10px; margin-top: 4px;">
+                            Chat: <strong>${escapeHtml(activeChatTitle)}</strong> | Topic: <strong>${escapeHtml(activeTopicTitle)}</strong>
+                        </div>
+                    </div>
+                    <div style="text-align: right; font-size: 10px; color: #64748b;">
+                        <div>Period: <strong>${escapeHtml(dateRangeDisplay.textContent.trim())}</strong></div>
+                        <div>Generated: <strong>${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</strong></div>
+                    </div>
+                </div>
+
+                <!-- Stats summary badges -->
+                <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                    <div style="flex: 1; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 8px; text-align: center;">
+                        <div style="font-size: 14px; font-weight: 800; color: #2563eb;">${statStaffCount.textContent}</div>
+                        <div style="font-size: 8px; color: #64748b; text-transform: uppercase;">Active Staff</div>
+                    </div>
+                    <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 8px; text-align: center;">
+                        <div style="font-size: 14px; font-weight: 800; color: #16a34a;">${statReportCount.textContent}</div>
+                        <div style="font-size: 8px; color: #64748b; text-transform: uppercase;">Total Reports</div>
+                    </div>
+                    <div style="flex: 1; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 6px 8px; text-align: center;">
+                        <div style="font-size: 14px; font-weight: 800; color: #d97706;">${statAvgSuccess.textContent}</div>
+                        <div style="font-size: 8px; color: #64748b; text-transform: uppercase;">Avg Success</div>
+                    </div>
+                    <div style="flex: 1; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 6px 8px; text-align: center;">
+                        <div style="font-size: 14px; font-weight: 800; color: #9333ea;">${statTotalTasks.textContent}</div>
+                        <div style="font-size: 8px; color: #64748b; text-transform: uppercase;">Tasks Tracked</div>
+                    </div>
+                </div>
+
+                <!-- Summary Table -->
+                <h3 style="font-size: 12px; margin-top: 14px; margin-bottom: 6px; color: #0f172a;">Staff Performance Summary</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
+                    <thead>
+                        <tr style="background: #f1f5f9;">
+                            <th style="border: 1px solid #cbd5e1; padding: 5px; font-size: 9px; width: 30px; text-align: center;">No.</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 5px; font-size: 9px;">Staff Member</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 5px; font-size: 9px; width: 60px; text-align: center;">Reports</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 5px; font-size: 9px; width: 50px; text-align: center;">In (📥)</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 5px; font-size: 9px; width: 50px; text-align: center;">Out (📤)</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 5px; font-size: 9px; width: 80px; text-align: center;">Tasks Done</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 5px; font-size: 9px; width: 70px; text-align: center;">Rate (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${summaryRowsHtml}
+                    </tbody>
+                </table>
+
+                <!-- Staff Detailed Logs -->
+                <h3 style="font-size: 12px; margin-top: 18px; margin-bottom: 10px; color: #0f172a;">Staff Report Details</h3>
+                ${staffDetailsHtml}
+            </div>
+        `;
+
+                pdfExportContainer.style.display = 'block';
+
+                const opt = {
+                    margin: [10, 10, 10, 10],
+                    filename: `Staff_Reports_${currentChatId}_${getTodayStr()}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                };
+
+                html2pdf().set(opt).from(pdfExportContainer).save().then(() => {
+                    pdfExportContainer.style.display = 'none';
+                    showToast('PDF exported successfully!', 'success');
+                }).catch(err => {
+                    pdfExportContainer.style.display = 'none';
+                    showToast(`PDF Export failed: ${err.message}`, 'error');
+                });
+            }
+
+            // ================= CREATE PUBLIC SHARE LINK =================
+            function openShareModal() {
+                shareModalBackdrop.style.display = 'flex';
+                shareFormSection.style.display = 'block';
+                shareResultSection.style.display = 'none';
+                shareModalAlert.style.display = 'none';
+
+                const selName = chatSelect.options[chatSelect.selectedIndex] ? chatSelect.options[chatSelect.selectedIndex].text.split('(')[0].trim() : '';
+                inputShareTitle.value = selName ? `${selName} Reports` : `Staff Performance Reports`;
+                inputSharePassword.value = '';
+            }
+
+            function closeShareModal() {
+                shareModalBackdrop.style.display = 'none';
+            }
+
+            async function handleCreateShare() {
+                const title = inputShareTitle.value.trim();
+                const password = inputSharePassword.value.trim() || null;
+                const expiryHours = parseInt(selectShareExpiry.value);
+
+                btnGenerateShareLink.disabled = true;
+                btnGenerateShareLink.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Link...';
+
+                try {
+                    const payload = {
+                        chat_id: currentChatId,
+                        topic_id: selectedTopicId,
+                        title: title,
+                        password: password,
+                        expires_in_hours: expiryHours
+                    };
+
+                    const data = await apiRequest('/shares/create', 'POST', payload);
+
+                    const shareFullUrl = `${window.location.origin}${data.share_url}`;
+                    outputShareUrl.value = shareFullUrl;
+
+                    let metaText = `🔒 Password: <strong>${password ? escapeHtml(password) : 'None (Public)'}</strong>`;
+                    if (data.expires_at) {
+                        metaText += ` • Expires: ${new Date(data.expires_at).toLocaleDateString()}`;
+                    } else {
+                        metaText += ` • Permanent Link`;
+                    }
+                    shareResultMeta.innerHTML = metaText;
+
+                    shareFormSection.style.display = 'none';
+                    shareResultSection.style.display = 'block';
+                    showToast('Public share link generated!', 'success');
+                } catch (err) {
+                    shareModalAlert.className = 'modal-alert error';
+                    shareModalAlert.textContent = err.message;
+                    shareModalAlert.style.display = 'block';
+                } finally {
+                    btnGenerateShareLink.disabled = false;
+                    btnGenerateShareLink.innerHTML = '<i class="fas fa-link"></i> Generate Share Link';
+                }
+            }
+
+            function copyShareLink() {
+                outputShareUrl.select();
+                navigator.clipboard.writeText(outputShareUrl.value).then(() => {
+                    btnCopyShareUrl.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    showToast('Link copied to clipboard!', 'success');
+                    setTimeout(() => {
+                        btnCopyShareUrl.innerHTML = '<i class="far fa-copy"></i> Copy';
+                    }, 2000);
+                });
+            }
+
+            // ================= UNLOCK MODAL (PUBLIC VIEWER) =================
+            function openUnlockModal(msg = '') {
+                unlockModalBackdrop.style.display = 'flex';
+                inputUnlockPassword.value = '';
+                inputUnlockPassword.focus();
+                if (msg) {
+                    unlockAlert.className = 'modal-alert error';
+                    unlockAlert.textContent = msg;
+                    unlockAlert.style.display = 'block';
+                } else {
+                    unlockAlert.style.display = 'none';
+                }
+            }
+
+            function closeUnlockModal() {
+                unlockModalBackdrop.style.display = 'none';
+            }
+
+            async function handleUnlockReport() {
+                const pw = inputUnlockPassword.value.trim();
+                if (!pw) {
+                    unlockAlert.className = 'modal-alert error';
+                    unlockAlert.textContent = 'Please enter the access password.';
+                    unlockAlert.style.display = 'block';
+                    return;
+                }
+
+                btnUnlockReport.disabled = true;
+                btnUnlockReport.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Unlocking...';
+
+                try {
+                    const res = await fetch(`${API_BASE}/shares/${publicShareId}/verify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: pw })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.detail || 'Invalid password');
+                    }
+
+                    sharePassword = pw;
+                    sessionStorage.setItem(`share_pw_${publicShareId}`, pw);
+
+                    closeUnlockModal();
+                    showToast('Report unlocked successfully!', 'success');
+
+                    if (data.title) {
+                        pageTitleText.textContent = data.title;
+                        activeChatName.innerHTML = `<i class="fas fa-comments"></i> ${escapeHtml(data.title)}`;
+                    }
+
+                    await loadTopics();
+                    await loadReports();
+                } catch (err) {
+                    unlockAlert.className = 'modal-alert error';
+                    unlockAlert.textContent = err.message;
+                    unlockAlert.style.display = 'block';
+                } finally {
+                    btnUnlockReport.disabled = false;
+                    btnUnlockReport.innerHTML = '<i class="fas fa-unlock"></i> Unlock Report';
+                }
+            }
+
+            // ================= AUTH / LOGIN MODAL =================
+            function openLoginModal(alertMsg = '') {
+                loginModalBackdrop.style.display = 'flex';
+                switchLoginTab('phone');
+                showAuthStep(1);
+                if (alertMsg) {
+                    showModalAlert(alertMsg, 'error');
+                } else {
+                    hideModalAlert();
+                }
+            }
+
+            function closeLoginModal() {
+                loginModalBackdrop.style.display = 'none';
+                hideModalAlert();
+            }
+
+            function switchLoginTab(tab) {
+                if (tab === 'phone') {
+                    tabLoginPhone.classList.add('active');
+                    tabLoginToken.classList.remove('active');
+                    authPhoneFlow.style.display = 'block';
+                    authTokenFlow.style.display = 'none';
+                    inputPhoneNumber.focus();
+                } else {
+                    tabLoginPhone.classList.remove('active');
+                    tabLoginToken.classList.add('active');
+                    authPhoneFlow.style.display = 'none';
+                    authTokenFlow.style.display = 'block';
+                    inputBearerToken.value = token || '';
+                    inputBearerToken.focus();
+                }
+                hideModalAlert();
+            }
+
+            function showAuthStep(step) {
+                if (step === 1) {
+                    authStep1.style.display = 'block';
+                    authStep2.style.display = 'none';
+                    inputPhoneNumber.focus();
+                } else {
+                    authStep1.style.display = 'none';
+                    authStep2.style.display = 'block';
+                    inputOtpCode.value = '';
+                    input2FaPassword.value = '';
+                    inputOtpCode.focus();
+                }
+            }
+
+            function showModalAlert(msg, type = 'error') {
+                modalAlert.className = `modal-alert ${type}`;
+                modalAlert.textContent = msg;
+                modalAlert.style.display = 'block';
+            }
+
+            function hideModalAlert() {
+                modalAlert.className = 'modal-alert';
+                modalAlert.textContent = '';
+                modalAlert.style.display = 'none';
+            }
+
+            // Method 1: Send Code
+            async function handleSendCode() {
+                const phone = inputPhoneNumber.value.trim();
+                if (!phone) {
+                    showModalAlert('Please enter your phone number with country code.', 'error');
+                    return;
+                }
+
+                btnSendCode.disabled = true;
+                btnSendCode.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Code...';
+                hideModalAlert();
+
+                try {
+                    const res = await fetch(`${API_BASE}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone_number: phone })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.detail || 'Failed to request login code');
+                    }
+
+                    activeAuthPhoneHash = data.phone_code_hash;
+                    localStorage.setItem(STORAGE_PHONE_KEY, phone);
+                    displayPhoneTarget.textContent = phone;
+                    showAuthStep(2);
+                    showModalAlert('Code sent! Check your Telegram app for the OTP code.', 'success');
+                } catch (err) {
+                    showModalAlert(err.message, 'error');
+                } finally {
+                    btnSendCode.disabled = false;
+                    btnSendCode.innerHTML = '<i class="fas fa-paper-plane"></i> Send Login Code';
+                }
+            }
+
+            // Method 1: Verify Code
+            async function handleVerifyCode() {
+                const phone = localStorage.getItem(STORAGE_PHONE_KEY) || inputPhoneNumber.value.trim();
+                const code = inputOtpCode.value.trim();
+                const password = input2FaPassword.value.trim() || null;
+
+                if (!code) {
+                    showModalAlert('Please enter the OTP verification code.', 'error');
+                    return;
+                }
+
+                btnVerifyCode.disabled = true;
+                btnVerifyCode.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+                hideModalAlert();
+
+                try {
+                    const res = await fetch(`${API_BASE}/verify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            phone: phone,
+                            code: code,
+                            password: password,
+                            phone_code_hash: activeAuthPhoneHash
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.detail || 'Invalid verification code or password');
+                    }
+
+                    token = data.access_token;
+                    localStorage.setItem(STORAGE_TOKEN_KEY, token);
+                    localStorage.setItem(STORAGE_PHONE_KEY, phone);
+
+                    updateAccountBadge(true, phone);
+                    closeLoginModal();
+                    showToast('Successfully logged in!', 'success');
+
+                    // Refresh data
+                    await loadChats();
+                    await loadTopics();
+                    await loadReports();
+                } catch (err) {
+                    showModalAlert(err.message, 'error');
+                } finally {
+                    btnVerifyCode.disabled = false;
+                    btnVerifyCode.innerHTML = '<i class="fas fa-key"></i> Verify & Sign In';
+                }
+            }
+
+            // Method 2: Direct Bearer Token Login
+            async function handleVerifyToken() {
+                let rawToken = inputBearerToken.value.trim();
+                if (!rawToken) {
+                    showModalAlert('Please enter or paste your JWT Bearer token.', 'error');
+                    return;
+                }
+
+                // Remove "Bearer " prefix if user accidentally copied it
+                if (rawToken.toLowerCase().startsWith('bearer ')) {
+                    rawToken = rawToken.slice(7).trim();
+                }
+
+                btnVerifyToken.disabled = true;
+                btnVerifyToken.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+                hideModalAlert();
+
+                try {
+                    const res = await fetch(`${API_BASE}/telegram/status`, {
+                        headers: {
+                            'Authorization': `Bearer ${rawToken}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        throw new Error(err.detail || 'Invalid or expired Bearer token');
+                    }
+
+                    const data = await res.json();
+                    token = rawToken;
+                    localStorage.setItem(STORAGE_TOKEN_KEY, token);
+
+                    let userLabel = data.user || 'Active Token';
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        if (payload.phone) {
+                            userLabel = payload.phone;
+                            localStorage.setItem(STORAGE_PHONE_KEY, payload.phone);
+                        }
+                    } catch (e) { }
+
+                    updateAccountBadge(true, userLabel);
+                    closeLoginModal();
+                    showToast('Successfully authenticated with Token!', 'success');
+
+                    // Refresh data
+                    await loadChats();
+                    await loadTopics();
+                    await loadReports();
+                } catch (err) {
+                    showModalAlert(err.message, 'error');
+                } finally {
+                    btnVerifyToken.disabled = false;
+                    btnVerifyToken.innerHTML = '<i class="fas fa-sign-in-alt"></i> Authenticate with Token';
+                }
+            }
+
+            // ================= EVENT LISTENERS =================
+            btnLoginModal.addEventListener('click', () => openLoginModal());
+            btnCloseLoginModal.addEventListener('click', closeLoginModal);
+            tabLoginPhone.addEventListener('click', () => switchLoginTab('phone'));
+            tabLoginToken.addEventListener('click', () => switchLoginTab('token'));
+
+            btnSendCode.addEventListener('click', handleSendCode);
+            btnVerifyCode.addEventListener('click', handleVerifyCode);
+            btnVerifyToken.addEventListener('click', handleVerifyToken);
+            btnBackToStep1.addEventListener('click', () => showAuthStep(1));
+
+            btnOpenShareModal.addEventListener('click', openShareModal);
+            btnCloseShareModal.addEventListener('click', closeShareModal);
+            btnGenerateShareLink.addEventListener('click', handleCreateShare);
+            btnCopyShareUrl.addEventListener('click', copyShareLink);
+
+            btnUnlockReport.addEventListener('click', handleUnlockReport);
+            inputUnlockPassword.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleUnlockReport();
+            });
+
+            btnExportExcel.addEventListener('click', exportToExcel);
+            btnExportPdf.addEventListener('click', exportToPDF);
+
+            inputPhoneNumber.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSendCode();
+            });
+
+            inputOtpCode.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleVerifyCode();
+            });
+
+            input2FaPassword.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleVerifyCode();
+            });
+
+            // Close modals when clicking backdrop
+            loginModalBackdrop.addEventListener('click', (e) => {
+                if (e.target === loginModalBackdrop) closeLoginModal();
+            });
+            shareModalBackdrop.addEventListener('click', (e) => {
+                if (e.target === shareModalBackdrop) closeShareModal();
+            });
+
+            chatSelect.addEventListener('change', function () {
+                currentChatId = parseInt(this.value);
+                selectedTopicId = null; // reset topic on chat change
+
+                // Update URL param without full reload
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('chat_id', currentChatId);
+                window.history.replaceState({}, '', newUrl.toString());
+
+                // Update selected chat title display
+                const selText = this.options[this.selectedIndex].text;
+                activeChatName.innerHTML = `<i class="fas fa-comments"></i> ${escapeHtml(selText.split('(')[0].trim())}`;
+
+                // Reload topics and reports
+                loadTopics();
+                loadReports();
+            });
+
+            staffSelect.addEventListener('change', function () {
+                selectedStaff = this.value;
+                applyFiltersAndRender();
+            });
+
+            typeSelect.addEventListener('change', function () {
+                selectedType = this.value;
+                applyFiltersAndRender();
+            });
+
+            searchInput.addEventListener('input', function () {
+                searchQuery = this.value.trim();
+                applyFiltersAndRender();
+            });
+
+            btnRefresh.addEventListener('click', () => {
+                loadTopics();
+                loadReports();
+            });
+
+            // Date Range Presets
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    currentRange = this.dataset.range;
+                    const today = getTodayStr();
+                    let from = '', to = today;
+
+                    switch (currentRange) {
+                        case 'today':
+                            from = today;
+                            dateRangeDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> Today`;
+                            break;
+                        case 'week':
+                            from = getWeekStartStr();
+                            dateRangeDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> This Week`;
+                            break;
+                        case 'month':
+                            from = getMonthStartStr();
+                            dateRangeDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> This Month`;
+                            break;
+                        case 'all':
+                            from = '';
+                            to = '';
+                            dateRangeDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> All Time`;
+                            break;
+                    }
+
+                    dateFromInput.value = from;
+                    dateToInput.value = to;
+                    loadReports();
+                });
+            });
+
+            btnApplyDate.addEventListener('click', function () {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                const from = dateFromInput.value;
+                const to = dateToInput.value;
+
+                if (from && to) {
+                    dateRangeDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> ${formatDateDisplay(from)} – ${formatDateDisplay(to)}`;
+                } else if (from) {
+                    dateRangeDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> From ${formatDateDisplay(from)}`;
+                } else if (to) {
+                    dateRangeDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> Until ${formatDateDisplay(to)}`;
+                } else {
+                    dateRangeDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> All Time`;
+                }
+
+                loadReports();
+            });
+
+            // ================= INITIALIZATION =================
+            async function init() {
+                // Set default dates
+                dateFromInput.value = getWeekStartStr();
+                dateToInput.value = getTodayStr();
+
+                // Check if in Public Share Mode
+                if (publicShareId) {
+                    try {
+                        const infoRes = await fetch(`${API_BASE}/shares/${publicShareId}/info`);
+                        if (infoRes.status === 410) {
+                            errorContainer.innerHTML = `
+                        <div class="alert-error">
+                            <i class="fas fa-hourglass-end"></i>
+                            <div><strong>Share link expired:</strong> This public report link has expired.</div>
+                        </div>
+                    `;
+                            return;
+                        }
+                        if (!infoRes.ok) {
+                            throw new Error('Share link not found or invalid');
+                        }
+
+                        const shareInfo = await infoRes.json();
+                        currentChatId = shareInfo.chat_id;
+                        if (shareInfo.topic_id) selectedTopicId = shareInfo.topic_id;
+
+                        pageTitleText.textContent = shareInfo.title || 'Staff Performance Report';
+                        activeChatName.innerHTML = `<i class="fas fa-comments"></i> ${escapeHtml(shareInfo.title || 'Shared Chat')}`;
+
+                        if (shareInfo.requires_password && !sharePassword) {
+                            openUnlockModal();
+                            return;
+                        }
+                    } catch (err) {
+                        errorContainer.innerHTML = `
+                    <div class="alert-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div><strong>Error:</strong> ${escapeHtml(err.message)}</div>
+                    </div>
+                `;
+                        return;
+                    }
+                }
+
+                // 1. Check Auth Status
+                await checkAuthStatus();
+
+                // 2. Load Chats
+                await loadChats();
+
+                // 3. Load Topics
+                await loadTopics();
+
+                // 4. Load Reports
+                await loadReports();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+
+</html>

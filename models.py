@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
-from datetime import datetime
+from typing import List, Optional, Union
+from datetime import datetime, date
 
 class LoginRequest(BaseModel):
     phone_number: str = Field(..., example="+85500000000")
@@ -33,8 +33,9 @@ class DeleteRequest(BaseModel):
 
 class DateRangeRequest(BaseModel):
     chat_id: int = Field(..., example="-4586738257")
-    date_from: datetime = Field(..., example="2023-01-01T00:00:00")
-    date_to: datetime = Field(..., example="2023-12-31T23:59:59")
+    date_from: Optional[Union[datetime, date, str]] = Field(None, example="2023-01-01T00:00:00")
+    date_to: Optional[Union[datetime, date, str]] = Field(None, example="2023-12-31T23:59:59")
+    topic_id: Optional[int] = Field(None, example=7, description="Optional forum topic ID")
 
 class UserSession(BaseModel):
     phone: str 
@@ -61,6 +62,23 @@ class MessageOut(BaseModel):
     sender_name: Optional[str]
     media: bool
     reply_to: Optional[int]
+
+class CreateShareRequest(BaseModel):
+    chat_id: int
+    topic_id: Optional[int] = None
+    password: Optional[str] = None
+    title: Optional[str] = None
+    expires_in_hours: Optional[int] = None
+
+class VerifyShareRequest(BaseModel):
+    password: Optional[str] = None
+
+class ShareMessageRequest(BaseModel):
+    password: Optional[str] = None
+    date_from: Optional[Union[datetime, date, str]] = None
+    date_to: Optional[Union[datetime, date, str]] = None
+    topic_id: Optional[int] = None
+
 
 class MessageListResponse(BaseModel):
     chat_id: int

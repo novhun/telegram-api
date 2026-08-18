@@ -354,6 +354,37 @@
             border-color: rgba(0, 136, 204, 0.25);
             color: var(--accent-glow);
         }
+        .sidebar-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: rgba(148, 163, 184, 0.5);
+            padding: 14px 14px 6px 14px;
+            margin: 0;
+            list-style: none;
+        }
+        .sidebar-badge {
+            margin-left: auto;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            text-transform: uppercase;
+        }
+        .sidebar-badge.badge-green {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+        .sidebar-badge.badge-purple {
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+            border-color: rgba(192, 132, 252, 0.3);
+        }
         .sidebar-footer {
             border-top: 1px solid var(--border-glass);
             padding-top: 20px;
@@ -1023,6 +1054,7 @@
                 </div>
                 
                 <ul class="sidebar-nav">
+                    <li class="sidebar-section-title">Main Dashboard</li>
                     <li class="sidebar-nav-item">
                         <a class="sidebar-nav-link active" data-target="viewOverview">
                             <i class="fas fa-cube"></i>
@@ -1035,6 +1067,8 @@
                             <span>Contacts</span>
                         </a>
                     </li>
+
+                    <li class="sidebar-section-title">Chats & Groups</li>
                     <li class="sidebar-nav-item">
                         <a class="sidebar-nav-link" data-target="viewChats" id="navLinkChats">
                             <i class="fas fa-comments"></i>
@@ -1053,22 +1087,40 @@
                             <span>Group Topics</span>
                         </a>
                     </li>
+
+                    <li class="sidebar-section-title">Reports & Analytics</li>
+                    <li class="sidebar-nav-item">
+                        <a href="/report-chat" class="sidebar-nav-link" style="color: #60a5fa !important; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(96, 165, 250, 0.25);">
+                            <i class="fas fa-chart-line" style="color: #60a5fa !important;"></i>
+                            <span>Staff Reports</span>
+                            <span class="sidebar-badge badge-green">Live</span>
+                        </a>
+                    </li>
                     <li class="sidebar-nav-item">
                         <a class="sidebar-nav-link" data-target="viewReportPage" id="navLinkReportPage">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Report Page</span>
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Audit & Stats</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-section-title">Developer & Tools</li>
+                    <li class="sidebar-nav-item">
+                        <a href="/docs" target="_blank" class="sidebar-nav-link text-info">
+                            <i class="fas fa-book-bookmark text-info"></i>
+                            <span>Swagger API Docs</span>
+                            <span class="sidebar-badge badge-purple">OpenAPI</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/redoc" target="_blank" class="sidebar-nav-link" style="color: #a78bfa !important;">
+                            <i class="fas fa-file-lines" style="color: #a78bfa !important;"></i>
+                            <span>ReDoc Documentation</span>
                         </a>
                     </li>
                     <li class="sidebar-nav-item" id="pwaInstallItem" style="display: none;">
                         <a id="btnInstallPWA" class="sidebar-nav-link text-warning" style="cursor: pointer;">
                             <i class="fas fa-circle-down text-warning"></i>
                             <span>Install Native App</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-nav-item border-top border-secondary border-opacity-25 pt-2 mt-2">
-                        <a href="/docs" target="_blank" class="sidebar-nav-link text-info">
-                            <i class="fas fa-book-bookmark text-info"></i>
-                            <span>API Swagger Docs</span>
                         </a>
                     </li>
                 </ul>
@@ -1099,9 +1151,17 @@
                             <input type="text" id="inputGlobalHeaderSearch" class="form-control bg-transparent border-0 text-white shadow-none px-2 py-0 fs-7" placeholder="Search Console..." style="height: auto; line-height: 1.5;">
                         </div>
                     </div>
-                    <div class="account-badge">
-                        <div class="status-dot"></div>
-                        <span id="labelAccountPhone">Session Running</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="/report-chat" class="btn btn-sm btn-outline-primary rounded-pill d-none d-md-inline-flex align-items-center px-3" style="font-size: 0.82rem; border-color: rgba(96, 165, 250, 0.4);">
+                            <i class="fas fa-chart-line me-1 text-primary"></i> Staff Reports
+                        </a>
+                        <a href="/docs" target="_blank" class="btn btn-sm btn-outline-light rounded-pill d-none d-md-inline-flex align-items-center px-3" style="font-size: 0.82rem;">
+                            <i class="fas fa-book-bookmark me-1 text-info"></i> API Docs
+                        </a>
+                        <div class="account-badge">
+                            <div class="status-dot"></div>
+                            <span id="labelAccountPhone">Session Running</span>
+                        </div>
                     </div>
                 </div>
 
@@ -1120,6 +1180,49 @@
                             <div class="metric-data">
                                 <h4 id="statUserStatus">Active</h4>
                                 <p>Authorization Status</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Navigation & Feature Hub Card -->
+                    <div class="glass-card p-4 mb-4">
+                        <h4 class="mb-3 font-display"><i class="fas fa-compass me-2 text-primary"></i>Quick Navigation Hub</h4>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <a href="/report-chat" class="text-decoration-none">
+                                    <div class="p-3 rounded-3" style="background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(96, 165, 250, 0.3); transition: transform 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="fs-4 text-primary"><i class="fas fa-chart-line"></i></span>
+                                            <span class="badge bg-success text-white" style="font-size: 0.65rem;">NEW</span>
+                                        </div>
+                                        <h5 class="text-white mb-1 font-display" style="font-size: 1rem;">Staff Reports & Analytics</h5>
+                                        <p class="text-muted mb-0" style="font-size: 0.78rem;">Forum topic filtering, report in/out tracking, PDF & Excel export, and password-protected sharing.</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="javascript:void(0)" onclick="$('#navLinkChats').click()" class="text-decoration-none">
+                                    <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); transition: transform 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="fs-4 text-info"><i class="fas fa-comments"></i></span>
+                                            <span class="badge bg-secondary" style="font-size: 0.65rem;">MESSAGES</span>
+                                        </div>
+                                        <h5 class="text-white mb-1 font-display" style="font-size: 1rem;">Chats & Messaging</h5>
+                                        <p class="text-muted mb-0" style="font-size: 0.78rem;">Browse private and group chats, read message history, search conversations, and send instant messages.</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="javascript:void(0)" onclick="$('#navLinkGroupTopics').click()" class="text-decoration-none">
+                                    <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); transition: transform 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="fs-4 text-warning"><i class="fas fa-list-check"></i></span>
+                                            <span class="badge bg-secondary" style="font-size: 0.65rem;">FORUMS</span>
+                                        </div>
+                                        <h5 class="text-white mb-1 font-display" style="font-size: 1rem;">Forum Topics</h5>
+                                        <p class="text-muted mb-0" style="font-size: 0.78rem;">Inspect Telegram forum supergroup topics, inspect thread metadata, and manage general channels.</p>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>
